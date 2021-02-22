@@ -1,80 +1,95 @@
 import pytest
-from brownie import config
-from brownie import Contract
+from brownie import config, Contract
 
 
 @pytest.fixture
-def gov(accounts):
-    yield accounts[0]
+def curve_proxy(interface):
+    yield interface.ICurveStrategyProxy("0x9a3a03C614dc467ACC3e81275468e033c98d960E")
 
 
 @pytest.fixture
-def rewards(accounts):
-    yield accounts[1]
+def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, curve_proxy, gov_live):
+    strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
+    strategy.setKeeper(keeper)
+    curve_proxy.approveStrategy(strategy.crvIBgauge(), strategy, {"from": gov_live})
+    yield strategy
 
 
 @pytest.fixture
-def guardian(accounts):
-    yield accounts[2]
-
-
-@pytest.fixture
-def management(accounts):
-    yield accounts[3]
-
-
-@pytest.fixture
-def strategist(accounts):
-    yield accounts[4]
-
-
-@pytest.fixture
-def keeper(accounts):
-    yield accounts[5]
-
-
-@pytest.fixture
-def token():
-    token_address = "0x6b175474e89094c44da98b954eedeac495271d0f"  # this should be the address of the ERC-20 used by the strategy/vault (DAI)
-    yield Contract(token_address)
-
-
-@pytest.fixture
-def amount(accounts, token):
-    amount = 10_000 * 10 ** token.decimals()
-    # In order to get some funds for the token you are about to use,
-    # it impersonate an exchange address to use it's funds.
-    reserve = accounts.at("0xd551234ae421e3bcba99a0da6d736074f22192ff", force=True)
-    token.transfer(accounts[0], amount, {"from": reserve})
-    yield amount
-
-
-@pytest.fixture
-def weth():
-    token_address = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    yield Contract(token_address)
-
-
-@pytest.fixture
-def weth_amout(gov, weth):
-    weth_amout = 10 ** weth.decimals()
-    gov.transfer(weth, weth_amout)
-    yield weth_amout
-
-
-@pytest.fixture
-def vault(pm, gov, rewards, guardian, management, token):
+def vault(pm, gov, rewards, guardian, token):
     Vault = pm(config["dependencies"][0]).Vault
     vault = guardian.deploy(Vault)
     vault.initialize(token, gov, rewards, "", "", guardian)
     vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
-    vault.setManagement(management, {"from": gov})
     yield vault
 
 
 @pytest.fixture
-def strategy(strategist, keeper, vault, Strategy, gov):
-    strategy = strategist.deploy(Strategy, vault)
-    strategy.setKeeper(keeper)
-    vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
-    yield strategy
+def token(gov):
+    # crvIB token
+    yield Contract("0x5282a4eF67D9C33135340fB3289cc1711c13638C", owner=gov)
+
+
+@pytest.fixture
+def dai(gov):
+    # dai
+    yield Contract("0x6B175474E89094C44Da98b954EedeAC495271d0F", owner=gov)
+
+@pytest.fixture
+def crv(gov):
+    # crv token
+    yield Contract("0xD533a949740bb3306d119CC777fa900bA034cd52", owner=gov)
+
+@pytest.fixture
+def andre(accounts, token):
+    # Andre, giver of tokens, and maker of yield
+    crvIB_gauge = accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)
+    gauge_balance = token.balanceOf(crvIB_gauge)
+    andre_accnt = accounts[0]
+    token.transfer(andre_accnt, gauge_balance // 3, {"from": crvIB_gauge})
+    yield andre_accnt
+
+
+@pytest.fixture
+def gov(accounts):
+    # yearn multis... I mean YFI governance. I swear!
+    yield accounts[1]
+
+
+@pytest.fixture
+def gov_live(accounts):
+    # yearn multis... I mean YFI governance. I swear!
+    yield accounts.at("0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", force=True)
+
+
+@pytest.fixture
+def rewards(gov):
+    yield gov  # TODO: Add rewards contract
+
+
+@pytest.fixture
+def guardian(accounts):
+    # YFI Whale, probably
+    yield accounts[2]
+
+
+@pytest.fixture
+def strategist(accounts):
+    # You! Our new Strategist!
+    yield accounts[3]
+
+
+@pytest.fixture
+def keeper(accounts):
+    # This is our trusty bot!
+    yield accounts[4]
+
+
+@pytest.fixture
+def whale(accounts, andre, token, vault):
+    # Totally in it for the tech
+    a = accounts[9]
+    # Has 10% of tokens (was in the ICO)
+    bal = token.totalSupply() // 10
+    token.transfer(a, bal, {"from": andre})
+    yield a

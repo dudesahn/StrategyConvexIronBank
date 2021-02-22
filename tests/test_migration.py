@@ -1,16 +1,36 @@
-# TODO: Add tests that show proper migration of the strategy to a newer one
-#       Use another copy of the strategy to simulate the migration
-#       Show that nothing is lost!
+from util import genericStateOfStrat, genericStateOfVault
+from brownie import Wei
 
+def test_migration(
+    token,
+    strategy,
+    chain,
+    vault,
+    whale,
+    gov,
+    strategist,
+    StrategyCurveIBVoterProxy
+):
+    debt_ratio = 10_000
+    vault.addStrategy(strategy, debt_ratio, 0, 2 ** 256 -1, 1000, {"from": gov})
 
-def test_migration(token, vault, strategy, amount, Strategy, strategist, gov):
-    # Deposit to the vault and harvest
-    token.approve(vault.address, amount, {"from": gov})
-    vault.deposit(amount, {"from": gov})
-    strategy.harvest()
-    assert token.balanceOf(strategy.address) == amount
+    token.approve(vault, 2 ** 256 - 1, {"from": whale})
+    vault.deposit(Wei("100 ether"), {"from": whale})
+    strategy.harvest({"from": strategist})
 
-    # migrate to a new strategy
-    new_strategy = strategist.deploy(Strategy, vault)
-    strategy.migrate(new_strategy.address, {"from": gov})
-    assert token.balanceOf(new_strategy.address) == amount
+    genericStateOfStrat(strategy, token, vault)
+    genericStateOfVault(vault, token)
+
+    chain.sleep(2592000)
+    chain.mine(1)
+
+    print(
+        "\nEstimated APR: ",
+        "{:.2%}".format(((vault.totalAssets() - 100 * 1e18) * 12) / (100 * 1e18)),
+    )
+
+    strategy2 = strategist.deploy(StrategyCurveIBVoterProxy, vault)
+    vault.migrateStrategy(strategy, strategy2, {"from": gov})
+    genericStateOfStrat(strategy, token, vault)
+    genericStateOfStrat(strategy2, token, vault)
+    genericStateOfVault(vault, token)
