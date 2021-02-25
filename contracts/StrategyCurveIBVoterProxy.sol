@@ -31,7 +31,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     uint256 public constant FEE_DENOMINATOR = 10000;
 
     ICurveFi public crvIBpool = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
-    ICurveStrategyProxy public CurveProxy = ICurveStrategyProxy(address(0x9a3a03C614dc467ACC3e81275468e033c98d960E)); // Yearn's StrategyProxy
+    ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a3a03C614dc467ACC3e81275468e033c98d960E)); // Yearn's StrategyProxy
     ICrvV3 public crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
     IERC20 public dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
     IERC20 public usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
@@ -48,7 +48,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         // debtThreshold = 0;
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
-        want.safeApprove(address(CurveProxy), uint256(- 1));
+        want.safeApprove(address(curveProxy), uint256(- 1));
         dai.safeApprove(address(crvIBpool), uint256(- 1));
         usdc.safeApprove(address(crvIBpool), uint256(- 1));
         usdt.safeApprove(address(crvIBpool), uint256(- 1));
@@ -57,17 +57,17 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         // using all unwrapped tokens since there is a risk of insufficient funds for wrapped if swapping directly (sushiswap)
         crvPathDai = new address[](3);
-        crvPathDai[0] = address(Crv);
+        crvPathDai[0] = address(crv);
         crvPathDai[1] = address(weth);
         crvPathDai[2] = address(dai);
 
         crvPathUsdc = new address[](3);
-        crvPathUsdc[0] = address(Crv);
+        crvPathUsdc[0] = address(crv);
         crvPathUsdc[1] = address(weth);
         crvPathUsdc[2] = address(usdc);
 
         crvPathUsdt = new address[](3);
-        crvPathUsdt[0] = address(Crv);
+        crvPathUsdt[0] = address(crv);
         crvPathUsdt[1] = address(weth);
         crvPathUsdt[2] = address(usdt);
 
@@ -96,12 +96,12 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     // in crv
     function balanceOfReward() internal view returns (uint256){
-        return Crv.balanceOf(address(this));
+        return crv.balanceOf(address(this));
     }
 
     // balance of gauge tokens staked. 1:1 with `want`
     function balanceOfStaked() public view returns (uint256){
-        return CurveProxy.balanceOf(crvIBgauge);
+        return curveProxy.balanceOf(crvIBgauge);
         // uses a different nomenclature. This resolves to
         // => return IERC20(_gauge).balanceOf(address(proxy));
     }
@@ -117,12 +117,12 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         // NOTE: Should try to free up at least `_debtOutstanding` of underlying position
 
         if (balanceOfStaked() > 0) {
-            CurveProxy.harvest(crvIBgauge);
+            curveProxy.harvest(crvIBgauge);
 
             uint256 crvBalance = balanceOfReward();
             if (crvBalance > 0) {
             uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
-            IERC20(Crv).safeTransfer(voter, _keepCRV);
+            IERC20(crv).safeTransfer(voter, _keepCRV);
             uint256 crvRemainder = crvBalance.sub(_keepCRV);
             
                 _sell(crvRemainder);
@@ -138,7 +138,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         if (_debtOutstanding > 0) {
             if (_debtOutstanding > _profit) {
-                CurveProxy.withdraw(crvIBgauge, address(want), Math.min(balanceOfStaked(), _debtOutstanding));
+                curveProxy.withdraw(crvIBgauge, address(want), Math.min(balanceOfStaked(), _debtOutstanding));
             }
 
             _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)).sub(_profit));
@@ -149,15 +149,15 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         uint256 _investAmount = want.balanceOf(address(this));
         // move everything to proxy
-        want.safeTransfer(address(CurveProxy), _investAmount);
-        CurveProxy.deposit(crvIBgauge, address(want));
+        want.safeTransfer(address(curveProxy), _investAmount);
+        curveProxy.deposit(crvIBgauge, address(want));
     }
 
     function liquidatePosition(uint256 _amountNeeded) internal override returns (uint256 _liquidatedAmount, uint256 _loss){
         uint256 wantBal = want.balanceOf(address(this));
 
         if (_amountNeeded > wantBal) {
-            CurveProxy.withdraw(crvIBgauge, address(want), Math.min(balanceOfStaked(), _amountNeeded - wantBal));
+            curveProxy.withdraw(crvIBgauge, address(want), Math.min(balanceOfStaked(), _amountNeeded - wantBal));
         }
 
         _liquidatedAmount = Math.min(_amountNeeded, want.balanceOf(address(this)));
@@ -233,7 +233,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 	// setter functions
 	    
     function setProxy(address _proxy) external onlyGovernance {
-        CurveProxy = _proxy;
+        curveProxy = _proxy;
     }
     
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
@@ -247,7 +247,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             crvRouter = uniswapRouter;
         }
         crvPath = _path;
-        Crv.approve(crvRouter, uint256(- 1));
+        crv.approve(crvRouter, uint256(- 1));
     }
 
     function setOptimizePath(bool _toOptimize) external onlyAuthorized {
