@@ -233,7 +233,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 	// setter functions
 	    
     function setProxy(address _proxy) external onlyGovernance {
-        curveProxy = _proxy;
+        curveProxy = StrategyProxy(_proxy);
     }
     
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
