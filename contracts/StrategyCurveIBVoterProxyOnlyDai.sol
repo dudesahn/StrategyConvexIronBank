@@ -11,7 +11,7 @@ import "./interfaces/yearn.sol";
 import {IUniswapV2Router02} from "./interfaces/uniswap.sol";
 
 
-contract StrategyCurveIBVoterProxy is BaseStrategy {
+contract StrategyCurveIBVoterProxyOnlyDai is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
@@ -55,13 +55,13 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     function name() external override view returns (string memory) {
         // Add your own name here, suggestion e.g. "StrategyCreamYFI"
-        return "StrategyCurveIBVoterProxy";
+        return "StrategyCurveIBVoterProxyOnlyDai";
     }
     
+    // total assets held by strategy
     function estimatedTotalAssets() public override view returns (uint256) {
         return curveProxy.balanceOf(crvIBgauge);
     }
-
 
     // balance of unstaked `want` tokens
     function balanceOfPoolToken() internal view returns (uint256){
