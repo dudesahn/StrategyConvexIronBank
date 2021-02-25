@@ -45,7 +45,7 @@ def test_ops(token, strategy, chain, vault, whale, gov, strategist):
     print(f"\nWhale profit: ",  (token.balanceOf(whale) - whalebefore) / 1e18)
 
 
-def test_revoke(token, strategy, vault, whale, gov, strategist):
+def test_revoke_from_vault(token, strategy, vault, whale, gov, strategist):
     print("\n----test revoke----")
 
     debt_ratio = 10_000
@@ -67,6 +67,23 @@ def test_revoke(token, strategy, vault, whale, gov, strategist):
 
     genericStateOfStrat(strategy, token, vault)
     genericStateOfVault(vault, token)
+
+
+# def test_revoke_strategy_from_strategy(token, strategy, vault, whale, gov, strategist):
+#     # Deposit to the vault and harvest
+#     debt_ratio = 10_000
+#     vault.addStrategy(strategy, debt_ratio, 0, 2 ** 256 -1, 1000, {"from": gov})
+# 
+#     token.approve(vault, 2 ** 256 - 1, {"from": whale})
+#     initial_deposit = 100 * 1e18
+#     vault.deposit(initial_deposit, {"from": whale})
+# 
+#     strategy.harvest({"from": strategist})
+#     assert token.balanceOf(strategy.address) == amount
+# 
+#     strategy.setEmergencyExit()
+#     strategy.harvest() - good
+#     assert token.balanceOf(vault.address) == amount
 
 
 def test_reduce_limit(token, strategy, vault, whale, gov, strategist):

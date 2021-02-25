@@ -141,7 +141,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
                 curveProxy.withdraw(crvIBgauge, address(want), Math.min(balanceOfStaked(), _debtOutstanding));
             }
 
-            _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)).sub(_profit));
+            _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)));
         }
         return (_profit, _loss, _debtPayment);
     }
@@ -175,13 +175,17 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function prepareMigration(address _newStrategy) internal override {
         // TODO: Transfer any non-`want` tokens to the new strategy
         // NOTE: `migrate` will automatically forward all `want` in this strategy to the new one
-        prepareReturn(balanceOfStaked());
-    }
+        uint256 gaugeTokens = curveProxy.balanceOf(crvIBgauge);
+        if (gaugeTokens > 0) {
+             curveProxy.withdraw(crvIBgauge, address(want), gaugeTokens);
+         }
+     }
 
     // crv rewards are always sold for underlying dai, usdc, usdt and immediately deposited back in to the pool
     function protectedTokens() internal override view returns (address[] memory) {
-        address[] memory protected = new address[](1);
+        address[] memory protected = new address[](2);
         protected[0] = crvIBgauge;
+        protected[1] = address(crv);
         return protected;
     }
 
@@ -233,7 +237,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 	// setter functions
 	    
     function setProxy(address _proxy) external onlyGovernance {
-        curveProxy = StrategyProxy(_proxy);
+        curveProxy = ICurveStrategyProxy(_proxy);
     }
     
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
