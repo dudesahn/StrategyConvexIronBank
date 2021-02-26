@@ -4,7 +4,7 @@ from brownie import config, Contract
 
 @pytest.fixture
 def curve_proxy(interface):
-    yield interface.ICurveStrategyProxy("0x9a3a03C614dc467ACC3e81275468e033c98d960E")
+    yield interface.ICurveStrategyProxy("0x9a165622a744C20E3B2CB443AeD98110a33a231b")
 
 
 @pytest.fixture
