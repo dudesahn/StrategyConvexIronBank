@@ -24,9 +24,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
 
     address[] public crvPath;
-    address[] public crvPathDai;
-    address[] public crvPathUsdc;
-    address[] public crvPathUsdt;
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
 
@@ -34,12 +31,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)); // Yearn's Updated v3 StrategyProxy
     ICrvV3 public crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
     IERC20 public dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
-    IERC20 public usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
-    IERC20 public usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6
     IERC20 public weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
-
-// if this is set to false, then strategy defaults CRV -> WETH -> DAI
-    bool optimizePath = true;
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
@@ -48,10 +40,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         // debtThreshold = 0;
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
+        optimal = dai;
         want.safeApprove(address(curveProxy), uint256(- 1));
-        dai.safeApprove(address(crvIBpool), uint256(- 1));
-        usdc.safeApprove(address(crvIBpool), uint256(- 1));
-        usdt.safeApprove(address(crvIBpool), uint256(- 1));
+        optimal.safeApprove(address(crvIBpool), uint256(- 1));
         crv.approve(crvRouter, uint256(- 1));
         crv.approve(voter, uint256(- 1));
 
@@ -121,12 +112,14 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
             uint256 crvBalance = balanceOfReward();
             if (crvBalance > 0) {
-           // uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
-        	// IERC20(crv).safeTransfer(voter, _keepCRV);
-            // uint256 crvRemainder = crvBalance.sub(_keepCRV);
+            uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
+            IERC20(crv).safeTransfer(voter, _keepCRV);
+            proxy.lock();
+            uint256 crvRemainder = crvBalance.sub(_keepCRV);
             
-                _sell(crvBalance);
+                _sell(crvRemainder);
             }
+
             uint256 daiBalance = dai.balanceOf(address(this));
             uint256 usdcBalance = usdc.balanceOf(address(this));
             uint256 usdtBalance = usdt.balanceOf(address(this));
@@ -141,7 +134,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
                 curveProxy.withdraw(crvIBgauge, address(want), Math.min(balanceOfStaked(), _debtOutstanding));
             }
 
-            _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)));
+            _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)).sub(_profit));
         }
         return (_profit, _loss, _debtPayment);
     }
@@ -166,72 +159,20 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
 
     function _sell(uint256 _amount) internal {
-        if (optimizePath) {
-            crvPath = _optimalPath(_amount);
-        }
         IUniswapV2Router02(crvRouter).swapExactTokensForTokens(_amount, uint256(0), crvPath, address(this), now);
     }
 
     function prepareMigration(address _newStrategy) internal override {
         // TODO: Transfer any non-`want` tokens to the new strategy
         // NOTE: `migrate` will automatically forward all `want` in this strategy to the new one
-        uint256 gaugeTokens = curveProxy.balanceOf(crvIBgauge);
-        if (gaugeTokens > 0) {
-             curveProxy.withdraw(crvIBgauge, address(want), gaugeTokens);
-         }
-     }
+        prepareReturn(balanceOfStaked());
+    }
 
     // crv rewards are always sold for underlying dai, usdc, usdt and immediately deposited back in to the pool
     function protectedTokens() internal override view returns (address[] memory) {
-        address[] memory protected = new address[](2);
+        address[] memory protected = new address[](1);
         protected[0] = crvIBgauge;
-        protected[1] = address(crv);
         return protected;
-    }
-
-    // optimal amount of `want` received if crv were sold
-    function _optimalWant(uint256 _amount) public view returns (uint256){
-        uint256[3] memory wants = _estimateCrvPrices(_amount);
-
-        if (wants[0] >= wants[1] && wants[0] >= wants[2]) {
-            return wants[0];
-        } else if (wants[1] >= wants[0] && wants[1] >= wants[2]) {
-            return wants[1];
-        } else {
-            return wants[2];
-        }
-    }
-
-    // optimal path to sell crv to maximize `want`
-    function _optimalPath(uint256 _amount) public returns (address[] memory){
-        uint256[3] memory wants = _estimateCrvPrices(_amount);
-
-        if (wants[0] >= wants[1] && wants[0] >= wants[2]) {
-            return crvPathDai;
-        } else if (wants[1] >= wants[0] && wants[1] >= wants[2]) {
-            return crvPathUsdc;
-        } else {
-            return crvPathUsdt;
-        }
-    }
-
-    // estimate amount of `want` back if crv were sold in each of the 3 pool tokens
-    function _estimateCrvPrices(uint256 _amount) public view returns (uint256[3] memory){
-        if (_amount <= 0) {
-            return [uint256(0), uint256(0), uint256(0)];
-        }
-
-        uint256 outDai = IUniswapV2Router02(crvRouter).getAmountsOut(_amount, crvPathDai)[1];
-        uint256 outUsdc = IUniswapV2Router02(crvRouter).getAmountsOut(_amount, crvPathUsdc)[1];
-        uint256 outUsdt = IUniswapV2Router02(crvRouter).getAmountsOut(_amount, crvPathUsdt)[1];
-
-        // amount of want tokens
-        uint256 tokenDaiDeposit = crvIBpool.calc_token_amount([outDai, 0, 0], true);
-        uint256 tokenUsdcDeposit = crvIBpool.calc_token_amount([0, outUsdc, 0], true);
-        uint256 tokenUsdtDeposit = crvIBpool.calc_token_amount([0, 0, outUsdt], true);
-
-        uint256[3] memory wants = [tokenDaiDeposit, tokenUsdcDeposit, tokenUsdtDeposit];
-        return wants;
     }
 
 	// setter functions
@@ -244,19 +185,37 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         keepCRV = _keepCRV;
     }
 
-    function setCrvRouter(bool isSushiswap, address[] calldata _path) external onlyGovernance {
+    function setCrvRouter(bool isSushiswap) external onlyAuthorized {
         if (isSushiswap) {
             crvRouter = sushiswapRouter;
         } else {
             crvRouter = uniswapRouter;
         }
-        crvPath = _path;
+        
         crv.approve(crvRouter, uint256(- 1));
     }
 
-    function setOptimizePath(bool _toOptimize) external onlyAuthorized {
-        optimizePath = _toOptimize;
+    function setOptimal(uint256 _optimal) external onlyAuthorized {
+        if(_optimal == 0){
+        	crvPath = crvPathDai;
+        	optimal = dai;
+        } else if (_optimal == 1) {
+        	crvPath = crvPathUsdc;
+        	optimal = usdc;
+        } else if (_optimal == 2) {
+        	crvPath = crvPathUsdt;
+        	optimal = usdt;
+        } else {
+        require(false, "incorrect token");
+        }	
+        
+        optimal.safeApprove(address(crvIBpool), uint256(- 1));
     }
+
+
+
+
+
 
 
 }   
