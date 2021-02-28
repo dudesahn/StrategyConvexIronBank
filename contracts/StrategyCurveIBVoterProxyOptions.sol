@@ -68,7 +68,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         crvPathUsdt[2] = address(usdt);
 
         crvPath = crvPathDai;
-        optimal = dai;
+        address optimal = address(dai);
     }
 
     function name() external override view returns (string memory) {
@@ -207,13 +207,13 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function setOptimal(uint256 _optimal) external onlyAuthorized {
         if(_optimal == 0){
         	crvPath = crvPathDai;
-        	optimal = dai;
+        	address optimal = address(dai);
         } else if (_optimal == 1) {
         	crvPath = crvPathUsdc;
-        	optimal = usdc;
+        	address optimal = address(usdc);
         } else if (_optimal == 2) {
         	crvPath = crvPathUsdt;
-        	optimal = usdt;
+        	address optimal = address(usdt);
         } else {
         require(false, "incorrect token");
         }	
