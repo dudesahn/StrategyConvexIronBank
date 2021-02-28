@@ -184,6 +184,14 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         }
     }
 
+    function protectedTokens() internal view override returns (address[] memory) {
+        address[] memory protected = new address[](2);
+        protected[0] = crvIBgauge;
+        protected[1] = address(crv);
+
+        return protected;
+    }
+    
 	// setter functions
 	    
     function setProxy(address _proxy) external onlyGovernance {
