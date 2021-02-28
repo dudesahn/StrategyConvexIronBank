@@ -42,9 +42,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         // debtThreshold = 0;
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
-        optimal = dai;
         want.safeApprove(address(curveProxy), uint256(- 1));
-        optimal.safeApprove(address(crvIBpool), uint256(- 1));
+        dai.safeApprove(address(crvIBpool), uint256(- 1));
         crv.approve(crvRouter, uint256(- 1));
         crv.approve(voter, uint256(- 1));
 
@@ -65,6 +64,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         crvPathUsdt[2] = address(usdt);
 
         crvPath = crvPathDai;
+        optimal = dai;
     }
 
     function name() external override view returns (string memory) {
@@ -220,11 +220,5 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         
         optimal.safeApprove(address(crvIBpool), uint256(- 1));
     }
-
-
-
-
-
-
 
 }   
