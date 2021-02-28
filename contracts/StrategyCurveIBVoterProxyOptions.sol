@@ -24,6 +24,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
 
     address[] public crvPath;
+    address[] public crvPathDai;
+    address[] public crvPathUsdc;
+    address[] public crvPathUsdt;
+    address public optimal;
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
 
@@ -117,7 +121,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             uint256 crvBalance = balanceOfReward();
             uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
             IERC20(crv).safeTransfer(voter, _keepCRV);
-            proxy.lock();
+            curveProxy.lock();
             uint256 crvRemainder = crvBalance.sub(_keepCRV);
             
             _sell(crvRemainder);
