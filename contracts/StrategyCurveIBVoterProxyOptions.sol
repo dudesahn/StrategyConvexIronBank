@@ -111,14 +111,12 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             curveProxy.harvest(crvIBgauge);
 
             uint256 crvBalance = balanceOfReward();
-            if (crvBalance > 0) {
             uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
             IERC20(crv).safeTransfer(voter, _keepCRV);
             proxy.lock();
             uint256 crvRemainder = crvBalance.sub(_keepCRV);
             
                 _sell(crvRemainder);
-            }
 
             uint256 daiBalance = dai.balanceOf(address(this));
             uint256 usdcBalance = usdc.balanceOf(address(this));
