@@ -7,6 +7,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 interface ICurveStrategyProxy {
     function approveStrategy(address _gauge, address _strategy) external;
+    
+    function lock() external;
 
     function revokeStrategy(address _gauge) external;
 
