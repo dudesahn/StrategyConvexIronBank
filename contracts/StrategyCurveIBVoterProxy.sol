@@ -145,9 +145,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         }
 
         if (_debtOutstanding > 0) {
-            if (_debtOutstanding > _profit) {
-                curveProxy.withdraw(crvIBgauge, address(want), Math.min(balanceOfStaked(), _debtOutstanding));
-            }
+            uint256 stakedBal = curveProxy.balanceOf(crvIBgauge);
+            curveProxy.withdraw(crvIBgauge, address(want), Math.min(stakedBal, _debtOutstanding));
 
             _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)));
         }
