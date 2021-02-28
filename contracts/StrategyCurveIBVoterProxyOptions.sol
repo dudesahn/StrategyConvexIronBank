@@ -174,16 +174,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     function prepareMigration(address _newStrategy) internal override {
-        // TODO: Transfer any non-`want` tokens to the new strategy
-        // NOTE: `migrate` will automatically forward all `want` in this strategy to the new one
-        prepareReturn(balanceOfStaked());
-    }
-
-    // crv rewards are always sold for underlying dai, usdc, usdt and immediately deposited back in to the pool
-    function protectedTokens() internal override view returns (address[] memory) {
-        address[] memory protected = new address[](1);
-        protected[0] = crvIBgauge;
-        return protected;
+        uint256 gaugeTokens = curveProxy.balanceOf(crvIBgauge);
+        if (gaugeTokens > 0) {
+            curveProxy.withdraw(crvIBgauge, address(want), gaugeTokens);
+        }
     }
 
 	// setter functions
