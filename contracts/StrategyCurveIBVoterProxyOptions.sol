@@ -74,7 +74,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     
     // total assets held by strategy
     function estimatedTotalAssets() public override view returns (uint256) {
-        return curveProxy.balanceOf(crvIBgauge);
+        return curveProxy.balanceOf(crvIBgauge) +
+        want.balanceOf(address(this));
+        
     }
 
     // balance of unstaked `want` tokens
