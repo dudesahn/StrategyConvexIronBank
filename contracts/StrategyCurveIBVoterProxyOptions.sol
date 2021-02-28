@@ -27,7 +27,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address[] public crvPathDai;
     address[] public crvPathUsdc;
     address[] public crvPathUsdt;
-    address public optimal;
+    unit256 public optimal;
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
 
@@ -68,7 +68,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         crvPathUsdt[2] = address(usdt);
 
         crvPath = crvPathDai;
-        address optimal = address(dai);
+        optimal = 0;
     }
 
     function name() external override view returns (string memory) {
@@ -126,17 +126,17 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             
             _sell(crvRemainder);
 
-			if (optimal == dai) {
+			if (optimal == 0) {
  				uint256 daiBalance = dai.balanceOf(address(this));
   				crvIBpool.add_liquidity([daiBalance, 0, 0], 0, true);
 			}
 			
-			if (optimal == usdc) {
+			if (optimal == 1) {
  				uint256 usdcBalance = usdc.balanceOf(address(this));
   				crvIBpool.add_liquidity([0, usdcBalance, 0], 0, true);
 			}
 			
-			if (optimal == usdt) {
+			if (optimal == 2) {
  				uint256 usdtBalance = usdt.balanceOf(address(this));
   				crvIBpool.add_liquidity([0, 0, usdtBalance], 0, true);
 			}
@@ -207,18 +207,20 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function setOptimal(uint256 _optimal) external onlyAuthorized {
         if(_optimal == 0){
         	crvPath = crvPathDai;
-        	address optimal = address(dai);
+        	optimal = 0;
+        	dai.safeApprove(address(crvIBpool), uint256(- 1));
         } else if (_optimal == 1) {
         	crvPath = crvPathUsdc;
-        	address optimal = address(usdc);
+        	optimal = 1;
+        	usdc.safeApprove(address(crvIBpool), uint256(- 1));
         } else if (_optimal == 2) {
         	crvPath = crvPathUsdt;
-        	address optimal = address(usdt);
+        	optimal = 2
+        	usdt.safeApprove(address(crvIBpool), uint256(- 1));
         } else {
         require(false, "incorrect token");
         }	
         
-        optimal.safeApprove(address(crvIBpool), uint256(- 1));
     }
 
 }   
