@@ -28,16 +28,20 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address[] public crvPathUsdc;
     address[] public crvPathUsdt;
     uint256 public optimal;
+    
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
+    bool public checkLiqGauge = true;
 
     ICurveFi public crvIBpool = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
     ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)); // Yearn's Updated v3 StrategyProxy
+    
+    IERC20 public constant weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
+    
     ICrvV3 public crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
     IERC20 public dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
     IERC20 public usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
     IERC20 public usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6
-    IERC20 public weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
@@ -78,9 +82,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     
     // total assets held by strategy
     function estimatedTotalAssets() public override view returns (uint256) {
-        return curveProxy.balanceOf(crvIBgauge) +
-        want.balanceOf(address(this));
-        
+        return curveProxy.balanceOf(crvIBgauge).add(want.balanceOf(address(this)));
     }
 
     // balance of unstaked `want` tokens
@@ -154,11 +156,24 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     function adjustPosition(uint256 _debtOutstanding) internal override {
-        uint256 _investAmount = want.balanceOf(address(this));
-        // move everything to proxy
-        want.safeTransfer(address(curveProxy), _investAmount);
+
+        //when migrated to we will sometimes have liquidity gauge balance. 
+        //this should be withdrawn and added to proxy
+        if(checkLiqGauge){
+            uint256 liqGaugeBal = Gauge(crvIBgauge).balanceOf(address(this));
+
+            if(liqGaugeBal > 0){
+                Gauge(crvIBgauge).withdraw(liqGaugeBal);
+            }
+
+        }
+
+        uint256 _toInvest = want.balanceOf(address(this));
+        want.safeTransfer(address(curveProxy), _toInvest);
         curveProxy.deposit(crvIBgauge, address(want));
+
     }
+
 
     function liquidatePosition(uint256 _amountNeeded) internal override returns (uint256 _liquidatedAmount, uint256 _loss){
         uint256 wantBal = want.balanceOf(address(this));
@@ -196,7 +211,11 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function setProxy(address _proxy) external onlyGovernance {
         curveProxy = ICurveStrategyProxy(_proxy);
     }
-    
+
+    function updateCheckLiqGauge(bool _checkLiqGauge) public onlyAuthorized {
+        checkLiqGauge = _checkLiqGauge;
+    }
+
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
         keepCRV = _keepCRV;
     }
@@ -209,6 +228,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         }
         
         crv.approve(crvRouter, uint256(- 1));
+    }
+
+    function setVoter(address _voter) external onlyGovernance {
+        voter = _voter;
     }
 
     function setOptimal(uint256 _optimal) external onlyAuthorized {
