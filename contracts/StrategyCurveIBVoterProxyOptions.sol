@@ -31,6 +31,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)); // Yearn's Updated v3 StrategyProxy
     ICrvV3 public crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
     IERC20 public dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
+    IERC20 public usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
+    IERC20 public usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6
     IERC20 public weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
 
     constructor(address _vault) public BaseStrategy(_vault) {
@@ -116,14 +118,23 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             proxy.lock();
             uint256 crvRemainder = crvBalance.sub(_keepCRV);
             
-                _sell(crvRemainder);
+            _sell(crvRemainder);
 
-            uint256 daiBalance = dai.balanceOf(address(this));
-            uint256 usdcBalance = usdc.balanceOf(address(this));
-            uint256 usdtBalance = usdt.balanceOf(address(this));
-
-            crvIBpool.add_liquidity([daiBalance, usdcBalance, usdtBalance], 0, true);
-
+			if (optimal == dai) {
+ 				uint256 daiBalance = dai.balanceOf(address(this));
+  				crvIBpool.add_liquidity([daiBalance, 0, 0], 0, true);
+			}
+			
+			if (optimal == usdc) {
+ 				uint256 usdcBalance = usdc.balanceOf(address(this));
+  				crvIBpool.add_liquidity([0, usdcBalance, 0], 0, true);
+			}
+			
+			if (optimal == usdt) {
+ 				uint256 usdtBalance = usdt.balanceOf(address(this));
+  				crvIBpool.add_liquidity([0, 0, usdtBalance], 0, true);
+			}
+			
             _profit = want.balanceOf(address(this));
         }
 
