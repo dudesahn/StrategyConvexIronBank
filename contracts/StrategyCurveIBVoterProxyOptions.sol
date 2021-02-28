@@ -27,7 +27,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address[] public crvPathDai;
     address[] public crvPathUsdc;
     address[] public crvPathUsdt;
-    unit256 public optimal;
+    uint256 public optimal;
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
 
@@ -215,7 +215,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         	usdc.safeApprove(address(crvIBpool), uint256(- 1));
         } else if (_optimal == 2) {
         	crvPath = crvPathUsdt;
-        	optimal = 2
+        	optimal = 2;
         	usdt.safeApprove(address(crvIBpool), uint256(- 1));
         } else {
         require(false, "incorrect token");
