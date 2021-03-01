@@ -139,10 +139,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         //when migrated to we will sometimes have liquidity gauge balance. 
         //this should be withdrawn and added to proxy
         if(checkLiqGauge){
-            uint256 liqGaugeBal = Gauge(crvIBgauge).balanceOf(address(this));
+            uint256 liqGaugeBal = IGauge(crvIBgauge).balanceOf(address(this));
 
             if(liqGaugeBal > 0){
-                Gauge(crvIBgauge).withdraw(liqGaugeBal);
+                IGauge(crvIBgauge).withdraw(liqGaugeBal);
             }
 
         }
