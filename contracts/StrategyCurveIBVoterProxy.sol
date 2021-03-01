@@ -190,7 +190,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         curveProxy = ICurveStrategyProxy(_proxy);
     }
 
-    function updateCheckLiqGauge(bool _checkLiqGauge) public onlyAuthorized {
+    function updateCheckLiqGauge(bool _checkLiqGauge) external onlyAuthorized {
         checkLiqGauge = _checkLiqGauge;
     }
 
