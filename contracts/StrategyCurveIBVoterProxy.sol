@@ -167,7 +167,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
 
     function _sell(uint256 _amount) internal {
-        IUniswapV2Router02(crvRouter).swapExactTokensForTokens(_amount, uint256(0), crvPath, address(this), now);
+        IUniswapV2Router02(crvRouter).swapExactTokensForTokens(_amount, uint256(0), crvPath, address(this), now.add(1800));
     }
 
     function prepareMigration(address _newStrategy) internal override {
