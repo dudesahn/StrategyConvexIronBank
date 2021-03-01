@@ -24,9 +24,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
 
     address[] public crvPath;
-    address[] public crvPathDai;
-    address[] public crvPathUsdc;
-    address[] public crvPathUsdt;
+    address[] internal crvPathDai;
+    address[] internal crvPathUsdc;
+    address[] internal crvPathUsdt;
     uint256 public optimal;
     
     uint256 public keepCRV = 1000;
@@ -156,15 +156,15 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     function liquidatePosition(uint256 _amountNeeded) internal override returns (uint256 _liquidatedAmount, uint256 _loss){
         uint256 wantBal = want.balanceOf(address(this));
+        uint256 stakedBal = curveProxy.balanceOf(gauge);
 
         if (_amountNeeded > wantBal) {
-            curveProxy.withdraw(crvIBgauge, address(want), Math.min(balanceOfStaked(), _amountNeeded - wantBal));
+            curveProxy.withdraw(crvIBgauge, address(want), Math.min(stakedBal, _amountNeeded - wantBal));
         }
 
         _liquidatedAmount = Math.min(_amountNeeded, want.balanceOf(address(this)));
         return (_liquidatedAmount, _loss);
     }
-
 
     function _sell(uint256 _amount) internal {
         IUniswapV2Router02(crvRouter).swapExactTokensForTokens(_amount, uint256(0), crvPath, address(this), now.add(1800));
@@ -178,9 +178,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     function protectedTokens() internal view override returns (address[] memory) {
-        address[] memory protected = new address[](2);
+        address[] memory protected = new address[](1);
         protected[0] = crvIBgauge;
-        protected[1] = address(crv);
 
         return protected;
     }
