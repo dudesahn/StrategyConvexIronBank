@@ -9,7 +9,6 @@ import {
     IERC20,
     Address
 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {Math} from "@openzeppelin/contracts/math/Math.sol";
 
 import "./interfaces/curve.sol";
 import "./interfaces/yearn.sol";
@@ -20,8 +19,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     using Address for address;
     using SafeMath for uint256;
 
-    address private uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-    address private sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
     address public crvRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
 
     address public constant crvIBgauge = address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by curveProxy
@@ -55,9 +52,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         dai.safeApprove(address(crvIBpool), uint256(-1));
         crv.approve(crvRouter, uint256(-1));
         crv.approve(voter, uint256(-1));
-
-        // using all unwrapped tokens since there is a risk of insufficient funds for wrapped if swapping directly (sushiswap)
-
+	
         optimal = 0;
     }
 
@@ -204,13 +199,16 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         keepCRV = _keepCRV;
     }
 
-    function setCrvRouter(bool isSushiswap) external onlyAuthorized {
-        if (isSushiswap) {
+    function setCrvRouter(uint256 _isSushiswap) external onlyAuthorized {
+        if (_isSushiswap == 0) {
+            address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
             crvRouter = sushiswapRouter;
-        } else {
+        } else if (_isSushiswap == 1) {
+            address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
             crvRouter = uniswapRouter;
+        } else {
+            require(false, "incorrect value");
         }
-
         crv.approve(crvRouter, uint256(-1));
     }
 
@@ -251,8 +249,3 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         }
     }
 }
-
-
-
-
-
