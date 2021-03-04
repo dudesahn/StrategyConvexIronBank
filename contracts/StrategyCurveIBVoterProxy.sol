@@ -28,9 +28,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
 
     address[] public crvPath;
-    address[] internal crvPathDai;
-    address[] internal crvPathUsdc;
-    address[] internal crvPathUsdt;
     uint256 public optimal;
 
     uint256 public keepCRV = 1000;
@@ -60,22 +57,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         crv.approve(voter, uint256(-1));
 
         // using all unwrapped tokens since there is a risk of insufficient funds for wrapped if swapping directly (sushiswap)
-        crvPathDai = new address[](3);
-        crvPathDai[0] = address(crv);
-        crvPathDai[1] = address(weth);
-        crvPathDai[2] = address(dai);
 
-        crvPathUsdc = new address[](3);
-        crvPathUsdc[0] = address(crv);
-        crvPathUsdc[1] = address(weth);
-        crvPathUsdc[2] = address(usdc);
-
-        crvPathUsdt = new address[](3);
-        crvPathUsdt[0] = address(crv);
-        crvPathUsdt[1] = address(weth);
-        crvPathUsdt[2] = address(usdt);
-
-        crvPath = crvPathDai;
         optimal = 0;
     }
 
@@ -238,14 +220,29 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     function setOptimal(uint256 _optimal) external onlyAuthorized {
         if (_optimal == 0) {
+    	    address[] crvPathDai;
+            crvPathDai = new address[](3);
+            crvPathDai[0] = address(crv);
+            crvPathDai[1] = address(weth);
+            crvPathDai[2] = address(dai);
             crvPath = crvPathDai;
             optimal = 0;
             dai.safeApprove(address(crvIBpool), uint256(-1));
         } else if (_optimal == 1) {
-            crvPath = crvPathUsdc;
+    	    address[] crvPathUsdc;
+	    crvPathUsdc = new address[](3);
+            crvPathUsdc[0] = address(crv);
+            crvPathUsdc[1] = address(weth);
+            crvPathUsdc[2] = address(usdc);
+            crvPath = crvPathUsdc;        
             optimal = 1;
             usdc.safeApprove(address(crvIBpool), uint256(-1));
         } else if (_optimal == 2) {
+    	    address[] crvPathUsdt;        
+	    crvPathUsdt = new address[](3);
+            crvPathUsdt[0] = address(crv);
+            crvPathUsdt[1] = address(weth);
+            crvPathUsdt[2] = address(usdt);
             crvPath = crvPathUsdt;
             optimal = 2;
             usdt.safeApprove(address(crvIBpool), uint256(-1));
@@ -254,3 +251,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         }
     }
 }
+
+
+
+
+
