@@ -220,7 +220,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     function setOptimal(uint256 _optimal) external onlyAuthorized {
         if (_optimal == 0) {
-    	    address[] crvPathDai;
+    	    address[] memory crvPathDai;
             crvPathDai = new address[](3);
             crvPathDai[0] = address(crv);
             crvPathDai[1] = address(weth);
@@ -229,7 +229,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             optimal = 0;
             dai.safeApprove(address(crvIBpool), uint256(-1));
         } else if (_optimal == 1) {
-    	    address[] crvPathUsdc;
+    	    address[] memory crvPathUsdc;
 	    crvPathUsdc = new address[](3);
             crvPathUsdc[0] = address(crv);
             crvPathUsdc[1] = address(weth);
@@ -238,7 +238,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             optimal = 1;
             usdc.safeApprove(address(crvIBpool), uint256(-1));
         } else if (_optimal == 2) {
-    	    address[] crvPathUsdt;        
+    	    address[] memory crvPathUsdt;        
 	    crvPathUsdt = new address[](3);
             crvPathUsdt[0] = address(crv);
             crvPathUsdt[1] = address(weth);
