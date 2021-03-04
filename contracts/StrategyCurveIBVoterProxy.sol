@@ -29,7 +29,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by curveProxy
     address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
 
-    address[3] public crvPath;
+    address[3] public pure crvPath = [0xD533a949740bb3306d119CC777fa900bA034cd52, 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, 0x6B175474E89094C44Da98b954EedeAC495271d0F];
 
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
@@ -62,10 +62,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         crv.approve(crvRouter, uint256(-1));
         crv.approve(voter, uint256(-1));
 
-        // using all unwrapped tokens since there is a risk of insufficient funds for wrapped if swapping directly (sushiswap)
-        crvPath[0] = address(crv);
-        crvPath[1] = address(weth);
-        crvPath[2] = address(dai);
     }
 
     function name() external view override returns (string memory) {
