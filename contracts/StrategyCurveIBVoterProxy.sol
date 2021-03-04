@@ -35,7 +35,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
-    bool public checkLiqGauge = true;
+    uint public checkLiqGauge = 1; // checkLiqGauge = 1 is true
 
     ICurveFi public crvIBpool = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
     ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)); // Yearn's Updated v3 StrategyProxy
@@ -143,7 +143,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         //when migrated to we will sometimes have liquidity gauge balance.
         //this should be withdrawn and added to proxy
-        if (checkLiqGauge) {
+        if (checkLiqGauge == 1) {
             uint256 liqGaugeBal = IGauge(crvIBgauge).balanceOf(address(this));
 
             if (liqGaugeBal > 0) {
@@ -213,9 +213,16 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function setProxy(address _proxy) external onlyGovernance {
         curveProxy = ICurveStrategyProxy(_proxy);
     }
-
-    function updateCheckLiqGauge(bool _checkLiqGauge) external onlyAuthorized {
-        checkLiqGauge = _checkLiqGauge;
+    
+    // checkLiqGauge = 1 is true
+    function updateCheckLiqGauge(uint256 _checkLiqGauge) external onlyAuthorized {
+        if (_checkLiqGauge == 0) {
+            checkLiqGauge = 0;
+        } else if (_checkLiqGauge == 1) {
+            checkLiqGauge = 1;
+        } else {
+            require(false, "incorrect value");
+        }
     }
 
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
