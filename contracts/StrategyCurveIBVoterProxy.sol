@@ -116,20 +116,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
             _sell(crvRemainder);
 
-            if (optimal == 0) {
                 uint256 daiBalance = dai.balanceOf(address(this));
-                crvIBpool.add_liquidity([daiBalance, 0, 0], 0, true);
-            }
-
-            if (optimal == 1) {
                 uint256 usdcBalance = usdc.balanceOf(address(this));
-                crvIBpool.add_liquidity([0, usdcBalance, 0], 0, true);
-            }
-
-            if (optimal == 2) {
                 uint256 usdtBalance = usdt.balanceOf(address(this));
-                crvIBpool.add_liquidity([0, 0, usdtBalance], 0, true);
-            }
+                crvIBpool.add_liquidity([daiBalance, usdcBalance, usdtBalance], 0, true);
 
             _profit = want.balanceOf(address(this));
         }
