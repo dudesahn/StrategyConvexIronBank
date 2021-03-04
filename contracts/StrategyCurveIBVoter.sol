@@ -21,12 +21,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     using SafeMath for uint256;
 
     address private uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-    address private sushiswapRouter =
-        0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+    address private sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
     address public crvRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
 
-    address public crvIBgauge =
-        address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by curveProxy
+    address public crvIBgauge = address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by curveProxy
     address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
 
     address[] public crvPath;
@@ -41,22 +39,14 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     ICurveFi public crvIBpool =
         ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
-    ICurveStrategyProxy public curveProxy =
-        ICurveStrategyProxy(
-            address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)
-        ); // Yearn's Updated v3 StrategyProxy
+    ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)); // Yearn's Updated v3 StrategyProxy
 
-    IERC20 public weth =
-        IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
+    IERC20 public weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
 
-    ICrvV3 public crv =
-        ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
-    IERC20 public dai =
-        IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
-    IERC20 public usdc =
-        IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
-    IERC20 public usdt =
-        IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6
+    ICrvV3 public crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
+    IERC20 public dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
+    IERC20 public usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
+    IERC20 public usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
