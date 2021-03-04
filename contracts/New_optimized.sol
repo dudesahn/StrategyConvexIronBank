@@ -25,18 +25,18 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
     address public crvRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
 
-    address public view crvIBgauge =
+    address public crvIBgauge =
         address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by curveProxy
     address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
 
     address[] public crvPath;
-    address[] internal crvPathDai;
-    address[] internal crvPathUsdc;
-    address[] internal crvPathUsdt;
+    address[] crvPathDai;
+    address[] crvPathUsdc;
+    address[] crvPathUsdt;
     uint256 public optimal;
 
     uint256 public keepCRV = 1000;
-    uint256 public view FEE_DENOMINATOR = 10000;
+    uint256 public constant FEE_DENOMINATOR = 10000;
     bool public checkLiqGauge = true;
 
     ICurveFi public crvIBpool =
@@ -46,7 +46,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)
         ); // Yearn's Updated v3 StrategyProxy
 
-    IERC20 public view weth =
+    IERC20 public weth =
         IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
 
     ICrvV3 public crv =
