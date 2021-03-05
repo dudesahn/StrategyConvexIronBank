@@ -14,7 +14,7 @@ def test_ops(token, strategy, chain, vault, whale, gov, strategist):
     vault.deposit(initial_deposit, {"from": whale})
     
     # set optimal and harvest
-	strategy.setOptimal(0)
+    strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
     print("\n-----harvest-----")
