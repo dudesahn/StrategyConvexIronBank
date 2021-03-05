@@ -12,24 +12,24 @@ def test_operation(accounts, token, vault, strategy, strategist, amount):
     assert token.balanceOf(vault.address) == amount
 
     # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
-    strategy.setOptimal(0, {"from": gov})
+    strategy.setOptimal(0)
 
     # harvest
-    strategy.harvest({"from": gov})
+    strategy.harvest({"from": strategist})
     assert token.balanceOf(strategy.address) == amount
 
     # set optimal to USDC
     strategy.setOptimal(1)
 
     # harvest
-    strategy.harvest({"from": gov})
+    strategy.harvest({"from": strategist})
     assert token.balanceOf(strategy.address) == amount
 
     # set optimal to USDT
     strategy.setOptimal(2)
 
     # harvest
-    strategy.harvest({"from": gov})
+    strategy.harvest({"from": strategist})
     assert token.balanceOf(strategy.address) == amount
 
     # tend()

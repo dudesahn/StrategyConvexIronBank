@@ -9,8 +9,8 @@ def test_migration(token, vault, strategy, amount, strategist, gov):
     # Put some funds into current strategy
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})
-    strategy.setOptimal(0, {"from": gov})
-    strategy.harvest({"from": gov})
+    strategy.setOptimal(0)
+    strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 
     # migrate to a new strategy
