@@ -2,7 +2,7 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})
-	strategy.setOptimal(0)
+    strategy.setOptimal(0)
     strategy.harvest()
     assert strategy.estimatedTotalAssets() == amount
 
@@ -15,7 +15,7 @@ def test_revoke_strategy_from_strategy(token, vault, strategy, amount, gov):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})
-	strategy.setOptimal(0)
+    strategy.setOptimal(0)
     strategy.harvest()
     assert strategy.estimatedTotalAssets() == amount
 
