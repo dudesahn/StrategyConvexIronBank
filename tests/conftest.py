@@ -62,7 +62,7 @@ def reserve(accounts):
     yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)
 
 @pytest.fixture
-def whale(accounts, token, vault, reserve):
+def whale(token, reserve):
     # Totally in it for the tech
     # Has 10% of tokens (was in the ICO)
     bal = token.totalSupply() // 10
