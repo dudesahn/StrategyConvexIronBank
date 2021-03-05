@@ -6,7 +6,7 @@ from brownie import Contract
 
 
 def test_operation(token, vault, strategy, strategist, amount, whale):
-    # Deposit to the vault
+    # Deposit to the vault, whale approves 10% of his stack and deposits it
     token.approve(vault, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
     assert token.balanceOf(vault) == amount
@@ -16,7 +16,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale):
 
     # harvest
     strategy.harvest({"from": strategist})
-    assert token.balanceOf(strategy.address) == amount
+    assert token.balanceOf(strategy) == amount
 
 #     set optimal to USDC
 #     strategy.setOptimal(1)
