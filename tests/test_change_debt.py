@@ -6,13 +6,13 @@ def test_change_debt(gov, token, vault, strategy, strategist, amount):
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})
     vault.updateStrategyDebtRatio(strategy.address, 5_000, {"from": gov})
-    strategy.setOptimal(0, {'from': strategist})
-    strategy.harvest({'from': strategist})
+    strategy.setOptimal(0, {"from": gov})
+    strategy.harvest({"from": gov})
 
     assert token.balanceOf(strategy.address) == amount / 2
 
     vault.updateStrategyDebtRatio(strategy.address, 10_000, {"from": gov})
-    strategy.harvest({'from': strategist})
+    strategy.harvest({"from": gov})
     assert token.balanceOf(strategy.address) == amount
 
     # In order to pass this tests, you will need to implement prepareReturn.
