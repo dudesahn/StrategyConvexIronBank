@@ -2,7 +2,7 @@ import brownie
 from helpers import showBalances
 from brownie import Contract
 
-# **** TEST ALL CONTRACT FUNCTIONS
+# **** TEST ALL CONTRACT FUNCTIONS 
 
 
 def test_operation(accounts, token, vault, strategy, strategist, amount):
