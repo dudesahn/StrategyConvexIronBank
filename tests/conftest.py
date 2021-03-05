@@ -58,25 +58,23 @@ def rando(accounts):
 
 @pytest.fixture
 def reserve(accounts):
+    # this is the gauge contract, holds >99% of pool tokens
     yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)
-
-@pytest.fixture
-def amount(reserve, token, gov):
-    amount = 10_000 * 10 ** token.decimals()
-    # In order to get some funds for the token you are about to use,
-    # it impersonate an exchange address to use its funds.
-    token.transfer(gov, amount, {"from": reserve})
-    yield amount
 
 @pytest.fixture
 def whale(accounts, token, vault, reserve):
     # Totally in it for the tech
-    a = accounts[6]
     # Has 10% of tokens (was in the ICO)
     bal = token.totalSupply() // 10
-    token.transfer(a, bal, {"from": reserve})
-    yield a
-
+    token.transfer(whale, bal, {"from": reserve})
+    yield whale
+    
+@pytest.fixture
+def amount(token, whale):
+    # set the amount that our whale friend is going to throw around; pocket change
+    amount = token.balanceOf(whale) * 0.1
+    yield amount    
+    
 
 # Set definitions for vault and strategy
 
