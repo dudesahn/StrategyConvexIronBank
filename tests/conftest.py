@@ -58,7 +58,7 @@ def rando(accounts):
 
 
 @pytest.fixture
-def whale(accounts, andre, token, vault):
+def whale(accounts, token, vault):
     # Totally in it for the tech
     a = accounts[6]
     # Has 10% of tokens (was in the ICO)
