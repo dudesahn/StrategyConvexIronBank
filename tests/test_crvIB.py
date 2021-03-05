@@ -57,6 +57,7 @@ def test_revoke_from_vault(token, strategy, vault, whale, gov, strategist):
     initial_deposit = 100 * 1e18
     vault.deposit(initial_deposit, {"from": whale})
 
+    strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
     genericStateOfStrat(strategy, token, vault)
@@ -98,6 +99,7 @@ def test_reduce_limit(token, strategy, vault, whale, gov, strategist):
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
     initial_deposit = 100 * 1e18
     vault.deposit(initial_deposit, {"from": whale})
+    strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
     # round off dust

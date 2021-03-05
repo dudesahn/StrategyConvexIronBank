@@ -16,6 +16,7 @@ def test_migration(
 
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
     vault.deposit(Wei("100 ether"), {"from": whale})
+    strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
     genericStateOfStrat(strategy, token, vault)

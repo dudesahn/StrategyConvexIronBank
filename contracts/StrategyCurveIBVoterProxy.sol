@@ -237,7 +237,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             dai.safeApprove(address(crvIBpool), uint256(-1));
         } else if (_optimal == 1) {
     	    address[] memory crvPathUsdc;
-	    crvPathUsdc = new address[](3);
+	    	crvPathUsdc = new address[](3);
             crvPathUsdc[0] = address(crv);
             crvPathUsdc[1] = address(weth);
             crvPathUsdc[2] = address(usdc);
@@ -246,7 +246,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             usdc.safeApprove(address(crvIBpool), uint256(-1));
         } else if (_optimal == 2) {
     	    address[] memory crvPathUsdt;        
-	    crvPathUsdt = new address[](3);
+	    	crvPathUsdt = new address[](3);
             crvPathUsdt[0] = address(crv);
             crvPathUsdt[1] = address(weth);
             crvPathUsdt[2] = address(usdt);
