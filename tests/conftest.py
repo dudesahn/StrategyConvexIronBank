@@ -5,42 +5,6 @@ from brownie import Contract
 
 # Would be good to test out swapping out the type of funds to sell
 
-# Define any accounts in this section
-
-@pytest.fixture
-def gov(accounts):
-    # yearn multis... I mean YFI governance. I swear!
-    yield accounts.at("0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", force=True)
-
-@pytest.fixture
-def rewards(accounts):
-    yield accounts[1]
-
-
-@pytest.fixture
-def guardian(accounts):
-    yield accounts[2]
-
-@pytest.fixture
-def management(accounts):
-    yield accounts[3]
-
-
-@pytest.fixture
-def strategist(accounts):
-    yield accounts[4]
-
-
-@pytest.fixture
-def keeper(accounts):
-    yield accounts[5]
-
-
-@pytest.fixture
-def rando(accounts):
-    yield accounts[6]
-
-
 # Define relevant tokens in this section
 
 @pytest.fixture
@@ -55,6 +19,53 @@ def crv():
 @pytest.fixture
 def dai():
     yield Contract("0x6B175474E89094C44Da98b954EedeAC495271d0F")
+
+# Define any accounts in this section
+
+@pytest.fixture
+def gov(accounts):
+    # yearn multis... I mean YFI governance. I swear!
+    yield accounts.at("0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", force=True)
+
+@pytest.fixture
+def rewards(accounts):
+    yield accounts[0]
+
+
+@pytest.fixture
+def guardian(accounts):
+    yield accounts[1]
+
+
+@pytest.fixture
+def management(accounts):
+    yield accounts[2]
+
+
+@pytest.fixture
+def strategist(accounts):
+    yield accounts[3]
+
+
+@pytest.fixture
+def keeper(accounts):
+    yield accounts[4]
+
+
+@pytest.fixture
+def rando(accounts):
+    yield accounts[5]
+
+
+@pytest.fixture
+def whale(accounts, andre, token, vault):
+    # Totally in it for the tech
+    a = accounts[6]
+    # Has 10% of tokens (was in the ICO)
+    bal = token.totalSupply() // 10
+    token.transfer(a, bal, {"from": andre})
+    yield a
+
 
 @pytest.fixture
 def amount(accounts, token, gov):
