@@ -3,7 +3,7 @@ from brownie import config
 from brownie import Contract
 
 
-# Would be good to test out swapping out the type of funds to sell 
+# Would be good to test out swapping out the type of funds to sell
 
 # Define any accounts in this section
 
@@ -81,41 +81,41 @@ def vault(pm, gov, rewards, guardian, management, token):
 def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov):
     strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.setKeeper(keeper)
-    vault.addStrategy(strategy, 10_000, 0, 2 ** 256 -1, 1_000, {"from": gov})
+    vault.addStrategy(strategy, 10_000, 0,  2 ** 256 -1, 1_000, {"from": gov})
     yield strategy
 
-@pytest.fixture
-def crv3():
-    yield Contract("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490")
-
-@pytest.fixture
-def usdc():
-    yield Contract("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
-
-@pytest.fixture
-def weth():
-    yield Contract("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
-
-@pytest.fixture
-def yveCrvContract(token):
-    yield Contract("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
-
-@pytest.fixture
-def yveCrv(token):
-    yield token
-
-@pytest.fixture
-def whale_eth(accounts):
-    yield accounts.at("0x73BCEb1Cd57C711feaC4224D062b0F6ff338501e", force=True)
-
-@pytest.fixture
-def whale_3crv(accounts):
-    yield accounts.at("0x5c00977a2002a3C9925dFDfb6815765F578a804f", force=True)
-
-@pytest.fixture
-def sushiswap_crv(accounts):
-    yield accounts.at("0x5c00977a2002a3C9925dFDfb6815765F578a804f", force=True)
-
-@pytest.fixture
-def sushiswap(accounts):
-    yield Contract("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F")
+# @pytest.fixture
+# def crv3():
+#     yield Contract("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490")
+# 
+# @pytest.fixture
+# def usdc():
+#     yield Contract("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+# 
+# @pytest.fixture
+# def weth():
+#     yield Contract("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
+# 
+# @pytest.fixture
+# def yveCrvContract(token):
+#     yield Contract("0xc5bDdf9843308380375a611c18B50Fb9341f502A")
+# 
+# @pytest.fixture
+# def yveCrv(token):
+#     yield token
+# 
+# @pytest.fixture
+# def whale_eth(accounts):
+#     yield accounts.at("0x73BCEb1Cd57C711feaC4224D062b0F6ff338501e", force=True)
+# 
+# @pytest.fixture
+# def whale_3crv(accounts):
+#     yield accounts.at("0x5c00977a2002a3C9925dFDfb6815765F578a804f", force=True)
+# 
+# @pytest.fixture
+# def sushiswap_crv(accounts):
+#     yield accounts.at("0x5c00977a2002a3C9925dFDfb6815765F578a804f", force=True)
+# 
+# @pytest.fixture
+# def sushiswap(accounts):
+#     yield Contract("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F")

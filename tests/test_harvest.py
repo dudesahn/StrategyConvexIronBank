@@ -1,9 +1,6 @@
 import brownie
 # from helpers import showBalances
-from brownie import Contract
-
-# **** TEST ALL CONTRACT FUNCTIONS
-
+# from brownie import Contract
 
 def test_operation(accounts, token, vault, strategy, strategist, amount):
     # Deposit to the vault
@@ -11,22 +8,22 @@ def test_operation(accounts, token, vault, strategy, strategist, amount):
     vault.deposit(amount, {"from": accounts[0]})
     assert token.balanceOf(vault.address) == amount
 
-    # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
-    strategy.setOptimal(0)
+	# set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
+	strategy.setOptimal(0)
 
     # harvest
     strategy.harvest()
     assert token.balanceOf(strategy.address) == amount
 
-    # set optimal to USDC
-    strategy.setOptimal(1)
+	# set optimal to USDC
+	strategy.setOptimal(1)
 
     # harvest
     strategy.harvest()
     assert token.balanceOf(strategy.address) == amount
 
-    # set optimal to USDT
-    strategy.setOptimal(2)
+	# set optimal to USDT
+	strategy.setOptimal(2)
 
     # harvest
     strategy.harvest()
