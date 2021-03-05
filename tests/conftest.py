@@ -81,7 +81,7 @@ def vault(pm, gov, rewards, guardian, management, token):
 def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov):
     strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.setKeeper(keeper)
-    vault.addStrategy(strategy, 10_000, 0, 1_000, {"from": gov})
+    vault.addStrategy(strategy, 10_000, 0, 2 ** 256 -1, 1_000, {"from": gov})
     yield strategy
 
 @pytest.fixture
