@@ -57,7 +57,7 @@ def dai():
     yield Contract("0x6B175474E89094C44Da98b954EedeAC495271d0F")
 
 @pytest.fixture
-def amount(accounts, token):
+def amount(accounts, token, gov):
     amount = 10_000 * 10 ** token.decimals()
     # In order to get some funds for the token you are about to use,
     # it impersonate an exchange address to use its funds.
