@@ -68,7 +68,7 @@ def whale(accounts, token, reserve):
     a = accounts[6]
     bal = token.totalSupply() // 10
     token.transfer(a, bal, {"from": reserve})
-    yield whale
+    yield a
     
 @pytest.fixture
 def amount(token, whale):
