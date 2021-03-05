@@ -69,6 +69,10 @@ def amount(accounts, token):
 # Set definitions for vault and strategy
 
 @pytest.fixture
+def curve_proxy(interface):
+    yield interface.ICurveStrategyProxy("0x9a165622a744C20E3B2CB443AeD98110a33a231b")
+
+@pytest.fixture
 def vault(pm, gov, rewards, guardian, management, token):
     Vault = pm(config["dependencies"][0]).Vault
     vault = guardian.deploy(Vault)
@@ -81,6 +85,7 @@ def vault(pm, gov, rewards, guardian, management, token):
 def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov):
     strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.setKeeper(keeper)
+    curve_proxy.approveStrategy(strategy.crvIBgauge(), strategy, {"from": gov})
     vault.addStrategy(strategy, 10_000, 0,  2 ** 256 -1, 1_000, {"from": gov})
     yield strategy
 
