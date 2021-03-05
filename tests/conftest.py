@@ -82,7 +82,7 @@ def vault(pm, gov, rewards, guardian, management, token):
     yield vault
 
 @pytest.fixture
-def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov):
+def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov, curve_proxy):
     strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.setKeeper(keeper)
     curve_proxy.approveStrategy(strategy.crvIBgauge(), strategy, {"from": gov})
