@@ -19,24 +19,23 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     using Address for address;
     using SafeMath for uint256;
 
-    address public crvRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
-
     address public constant crvIBgauge = address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by curveProxy
-    address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
+    ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)); // Yearn's Updated v3 StrategyProxy
+    
+    ICrvV3 public crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
+    
+    uint256 public optimal = 0;
 
+    ICurveFi public crvIBpool = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
+    address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter    
+    address public crvRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
     address[] public crvPath;
-    uint256 public optimal;
-
+    
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
     bool public checkLiqGauge = true;
 
-    ICurveFi public crvIBpool = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
-    ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)); // Yearn's Updated v3 StrategyProxy
-
-    IERC20 public constant weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
-
-    ICrvV3 public crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
+    IERC20 public weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
     IERC20 public dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
     IERC20 public usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
     IERC20 public usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6
@@ -49,11 +48,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
         want.safeApprove(address(curveProxy), uint256(-1));
-        dai.safeApprove(address(crvIBpool), uint256(-1));
         crv.approve(crvRouter, uint256(-1));
         crv.approve(voter, uint256(-1));
 	
-        optimal = 0;
     }
 
     function name() external view override returns (string memory) {
@@ -93,10 +90,20 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
             _sell(crvRemainder);
 
+            if (optimal == 0) {
                 uint256 daiBalance = dai.balanceOf(address(this));
+                crvIBpool.add_liquidity([daiBalance, 0, 0], 0, true);
+            }
+
+            if (optimal == 1) {
                 uint256 usdcBalance = usdc.balanceOf(address(this));
+                crvIBpool.add_liquidity([0, usdcBalance, 0], 0, true);
+            }
+
+            if (optimal == 2) {
                 uint256 usdtBalance = usdt.balanceOf(address(this));
-                crvIBpool.add_liquidity([daiBalance, usdcBalance, usdtBalance], 0, true);
+                crvIBpool.add_liquidity([0, 0, usdtBalance], 0, true);
+            }
 
             _profit = want.balanceOf(address(this));
         }
