@@ -9,8 +9,8 @@ from brownie import Contract
 
 @pytest.fixture
 def gov(accounts):
-    yield accounts[0]
-
+    # yearn multis... I mean YFI governance. I swear!
+    yield accounts.at("0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", force=True)
 
 @pytest.fixture
 def rewards(accounts):
@@ -62,7 +62,7 @@ def amount(accounts, token):
     # In order to get some funds for the token you are about to use,
     # it impersonate an exchange address to use its funds.
     reserve = accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)
-    token.transfer(accounts[0], amount, {"from": reserve})
+    token.transfer(gov, amount, {"from": reserve})
     yield amount
 
 
