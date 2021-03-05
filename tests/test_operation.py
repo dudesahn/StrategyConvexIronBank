@@ -11,22 +11,22 @@ def test_operation(accounts, token, vault, strategy, strategist, amount):
     vault.deposit(amount, {"from": accounts[0]})
     assert token.balanceOf(vault.address) == amount
 
-	# set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
-	strategy.setOptimal(0)
+    # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
+    strategy.setOptimal(0)
 
     # harvest
     strategy.harvest()
     assert token.balanceOf(strategy.address) == amount
 
-	# set optimal to USDC
-	strategy.setOptimal(1)
+    # set optimal to USDC
+    strategy.setOptimal(1)
 
     # harvest
     strategy.harvest()
     assert token.balanceOf(strategy.address) == amount
 
-	# set optimal to USDT
-	strategy.setOptimal(2)
+    # set optimal to USDT
+    strategy.setOptimal(2)
 
     # harvest
     strategy.harvest()
@@ -44,7 +44,7 @@ def test_emergency_exit(accounts, token, vault, strategy, strategist, amount):
     # Deposit to the vault
     token.approve(vault.address, amount, {"from": accounts[0]})
     vault.deposit(amount, {"from": accounts[0]})
-	strategy.setOptimal(0)
+    strategy.setOptimal(0)
     strategy.harvest()
     assert token.balanceOf(strategy.address) == amount
 
@@ -83,7 +83,7 @@ def test_change_debt(gov, token, vault, strategy, strategist, amount):
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})
     vault.updateStrategyDebtRatio(strategy.address, 5_000, {"from": gov})
-	strategy.setOptimal(0)
+    strategy.setOptimal(0)
     strategy.harvest()
 
     assert token.balanceOf(strategy.address) == amount / 2
@@ -116,7 +116,7 @@ def test_triggers(gov, vault, strategy, token, amount, weth, weth_amount):
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})
     vault.updateStrategyDebtRatio(strategy.address, 5_000, {"from": gov})
-	strategy.setOptimal(0)
+    strategy.setOptimal(0)
     strategy.harvest()
     strategy.harvestTrigger(0)
     strategy.tendTrigger(0)
