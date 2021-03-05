@@ -12,7 +12,9 @@ def test_ops(token, strategy, chain, vault, whale, gov, strategist):
     initial_deposit = 100 * 1e18
     whalebefore = token.balanceOf(whale)
     vault.deposit(initial_deposit, {"from": whale})
-
+    
+    # set optimal and harvest
+	strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
     print("\n-----harvest-----")
