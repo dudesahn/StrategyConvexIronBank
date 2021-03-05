@@ -1,7 +1,7 @@
 import brownie
 from brownie import Contract
 
-def test_emergency_exit(accounts, token, vault, strategy, strategist, amount):
+def test_emergency_exit(accounts, token, vault, strategy, strategist, amount, gov):
     # Deposit to the vault
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})

@@ -1,4 +1,4 @@
-def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov):
+def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})
@@ -11,7 +11,7 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov):
     assert token.balanceOf(vault.address) == amount
 
 
-def test_revoke_strategy_from_strategy(token, vault, strategy, amount, gov):
+def test_revoke_strategy_from_strategy(token, vault, strategy, amount, gov, strategist):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": gov})
     vault.deposit(amount, {"from": gov})
