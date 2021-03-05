@@ -56,25 +56,26 @@ def keeper(accounts):
 def rando(accounts):
     yield accounts[5]
 
+@pytest.fixture
+def reserve(accounts):
+    yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)
 
 @pytest.fixture
-def whale(accounts, token, vault):
+def amount(reserve, token, gov):
+    amount = 10_000 * 10 ** token.decimals()
+    # In order to get some funds for the token you are about to use,
+    # it impersonate an exchange address to use its funds.
+    token.transfer(gov, amount, {"from": reserve})
+    yield amount
+
+@pytest.fixture
+def whale(accounts, token, vault, reserve):
     # Totally in it for the tech
     a = accounts[6]
     # Has 10% of tokens (was in the ICO)
     bal = token.totalSupply() // 10
-    token.transfer(a, bal, {"from": andre})
+    token.transfer(a, bal, {"from": reserve})
     yield a
-
-
-@pytest.fixture
-def amount(accounts, token, gov):
-    amount = 10_000 * 10 ** token.decimals()
-    # In order to get some funds for the token you are about to use,
-    # it impersonate an exchange address to use its funds.
-    reserve = accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)
-    token.transfer(gov, amount, {"from": reserve})
-    yield amount
 
 
 # Set definitions for vault and strategy
