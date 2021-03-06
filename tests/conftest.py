@@ -28,7 +28,7 @@ def voter():
     
 @pytest.fixture
 def gauge():
-    # this is yearn's veCRV voter, where all gauge tokens are held (for v2 curve gauges that are tokenized)
+    # this is the gauge contract for the Iron Bank Curve Pool, in Curve v2 these are tokenized.
     yield Contract("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F")   
 
 # Define any accounts in this section
