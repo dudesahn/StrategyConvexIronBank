@@ -20,6 +20,8 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, cur
     strategy.harvest({"from": strategist})
     old_assets_dai = vault.totalAssets()
     assert curve_proxy.balanceOf(gauge) == amount
+    assert old_assets_dai == amount
+    assert old_assets_dai == curve_proxy.balanceOf(gauge)
 
     # simulate a month of earnings
     chain.sleep(2592000)
@@ -28,7 +30,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, cur
     # harvest after a month, store new asset amount
     strategy.harvest({"from": strategist})
     new_assets_dai = vault.totalAssets()
-    assert curve_proxy.balanceOf(gauge) > amount
+    # assert curve_proxy.balanceOf(gauge) > amount
     assert new_assets_dai > old_assets_dai
     
 #     genericStateOfStrat(strategy, currency, vault)
