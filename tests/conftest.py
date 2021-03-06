@@ -60,6 +60,11 @@ def rando(accounts):
 def gauge(accounts):
     # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale, as well for calling functions
     yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)    
+    
+@pytest.fixture
+def voter(accounts):
+    # this is yearn's veCRV voter, where all gauge tokens are held (for v2 curve gauges that are tokenized)
+    yield accounts.at("0xF147b8125d2ef93FB6965Db97D6746952a133934", force=True)        
 
 @pytest.fixture
 def whale(accounts, token, gauge):
