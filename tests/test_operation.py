@@ -18,6 +18,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
 
     # harvest, store asset amount
     strategy.harvest({"from": strategist})
+    tx.call_trace(True)
     old_assets_dai = vault.totalAssets()
     old_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
     old_gauge_balanceOf_voter = gauge.balanceOf(voter)
@@ -34,6 +35,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
 
     # harvest after a month, store new asset amount
     strategy.harvest({"from": strategist})
+    tx.call_trace(True)
     new_assets_dai = vault.totalAssets()
     new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
     new_gauge_balanceOf_voter = gauge.balanceOf(voter)
