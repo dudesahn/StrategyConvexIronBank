@@ -5,7 +5,7 @@ from brownie import Contract
 #       Show that nothing is lost!
 
 
-def test_migration(token, vault, strategy, amount, strategist, gov, whale):
+def test_migration(token, vault, strategy, amount, strategist, gov, whale, StrategyCurveIBVoterProxy):
     # Put some funds into current strategy
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
@@ -14,7 +14,7 @@ def test_migration(token, vault, strategy, amount, strategist, gov, whale):
     assert strategy.estimatedTotalAssets() == amount
 
     # migrate to a new strategy
-    new_strategy = strategist.deploy(Strategy, vault)
+    new_strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.migrate(new_strategy.address, {"from": gov})
     assert new_strategy.estimatedTotalAssets() == amount
     assert strategy.estimatedTotalAssets() == 0
