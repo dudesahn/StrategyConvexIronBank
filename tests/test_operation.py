@@ -22,6 +22,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
     old_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
     old_gauge_balanceOf_voter = gauge.balanceOf(voter)
     old_strategy_balance = token.balanceOf(strategy)
+    old_estimated_total_assets = strategy.estimatedTotalAssets()
     assert strategyProxy.balanceOf(gauge) == amount
     assert old_assets_dai == amount
     assert old_assets_dai == strategyProxy.balanceOf(gauge)
@@ -36,6 +37,9 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
     new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
     new_gauge_balanceOf_voter = gauge.balanceOf(voter)
     new_strategy_balance = token.balanceOf(strategy)
+    new_estimated_total_assets = strategy.estimatedTotalAssets()
+    print("\nOld Strategy totalAssets: ", old_estimated_total_assets)
+    print("\nNew Strategy totalAssets: ", new_estimated_total_assets)  
     print("\nOld Vault totalAssets: ", old_assets_dai)
     print("\nNew Vault totalAssets: ", new_assets_dai)    
     print("\nOld Strategy balanceOf: ", old_strategy_balance)
