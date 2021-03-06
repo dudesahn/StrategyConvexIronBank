@@ -3,14 +3,14 @@ from brownie import Contract
 
 def test_change_debt(gov, token, vault, strategy, strategist, amount, half, whale):
     # Deposit to the vault and harvest
-    token.approve(vault.address, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
-    vault.updateStrategyDebtRatio(strategy.address, half, {"from": gov})
+    token.approve(vault.address, 10_000, {"from": whale})
+    vault.deposit(10_000, {"from": whale})
+    vault.updateStrategyDebtRatio(strategy.address, 5_000, {"from": gov})
     strategy.setCrvRouter(0)
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
-    assert token.balanceOf(strategy.address) == half
+    assert token.balanceOf(strategy.address) == 5_000
 
     vault.updateStrategyDebtRatio(strategy.address, amount, {"from": gov})
     strategy.harvest({"from": strategist})
