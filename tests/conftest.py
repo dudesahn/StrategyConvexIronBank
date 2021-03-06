@@ -27,7 +27,7 @@ def voter():
     yield Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")    
     
 @pytest.fixture
-def gauge():
+def gaugeIB():
     # this is the gauge contract for the Iron Bank Curve Pool, in Curve v2 these are tokenized.
     yield Contract("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F")   
 
@@ -88,7 +88,7 @@ def whale(accounts, token,reserve):
 def amount(token, whale):
     # set the amount that our whale friend is going to throw around; pocket change
     amount = token.balanceOf(whale) * 0.1
-    yield amount    
+    yield amount
 
 # Set definitions for vault and strategy
 

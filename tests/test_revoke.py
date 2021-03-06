@@ -1,4 +1,4 @@
-def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist, whale, gauge, strategyProxy, voter):
+def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist, whale, gaugeIB, strategyProxy, voter):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
@@ -8,8 +8,8 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strateg
     assert strategy.estimatedTotalAssets() == amount
     
     old_assets_dai = vault.totalAssets()
-    old_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
-    old_gauge_balanceOf_voter = gauge.balanceOf(voter)
+    old_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
+    old_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
     old_strategy_balance = token.balanceOf(strategy)
     old_estimated_total_assets = strategy.estimatedTotalAssets()
     old_vault_balance = token.balanceOf(vault)
