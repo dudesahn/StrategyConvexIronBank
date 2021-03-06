@@ -15,6 +15,7 @@ def test_simple_harvest(token, vault, strategy, strategist, amount, whale, gauge
     # harvest, store asset amount
     strategy.harvest({"from": strategist})
     old_assets_dai = vault.totalAssets()
+    assert gaugeIB.balanceOf(voter) == strategyProxy.balanceOf(gaugeIB)
     assert strategyProxy.balanceOf(gaugeIB) == amount
     assert old_assets_dai == amount
     assert old_assets_dai == strategyProxy.balanceOf(gaugeIB)
@@ -38,3 +39,9 @@ def test_simple_harvest(token, vault, strategy, strategist, amount, whale, gauge
     # withdrawal
     vault.withdraw({"from": whale})
     assert token.balanceOf(whale) != 0
+    
+    
+    
+    1829257205725756280000000
+    
+    4.140845732483462e23
