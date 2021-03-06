@@ -31,7 +31,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, cur
     strategy.harvest({"from": strategist})
     new_assets_dai = vault.totalAssets()
     # assert curve_proxy.balanceOf(gauge) > amount
-    assert curve_proxy.balanceOf(gauge) = new_assets_dai
+    assert curve_proxy.balanceOf(gauge) == new_assets_dai
     assert new_assets_dai > old_assets_dai
    
         
