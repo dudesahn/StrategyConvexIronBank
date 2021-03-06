@@ -5,7 +5,7 @@ from brownie import Contract
 # **** TEST ALL CONTRACT FUNCTIONS
 
 
-def test_operation(token, vault, strategy, strategist, amount, whale):
+def test_operation(token, vault, strategy, strategist, amount, whale, gauge):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
     token.approve(vault, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
@@ -16,7 +16,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale):
 
     # harvest
     strategy.harvest({"from": strategist})
-    assert token.balanceOf(strategy) == amount
+    assert curve_proxy.balanceOf(gauge) == amount
 
 #     set optimal to USDC
 #     strategy.setOptimal(1)
