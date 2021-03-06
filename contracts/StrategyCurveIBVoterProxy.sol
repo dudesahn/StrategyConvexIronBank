@@ -29,7 +29,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     ICurveFi public pool = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
     address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter    
-    address public crvRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
+    address public crvRouter;
     address[] public crvPath;
     
     uint256 public keepCRV = 1000;
@@ -44,8 +44,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
         want.safeApprove(address(curveProxy), uint256(-1));
-        crv.approve(crvRouter, uint256(-1));
-        crv.approve(voter, uint256(-1));
 	
     }
 
@@ -207,7 +205,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     function setCrvRouter(uint256 _isSushiswap) external onlyAuthorized {
         if (_isSushiswap == 0) {
-            address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+            address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
             crvRouter = sushiswapRouter;
         } else if (_isSushiswap == 1) {
             address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
@@ -218,6 +216,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
         crv.approve(crvRouter, uint256(-1));
+        crv.approve(voter, uint256(-1));
     }
 
     function setVoter(address _voter) external onlyGovernance {

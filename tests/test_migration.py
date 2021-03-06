@@ -9,6 +9,7 @@ def test_migration(token, vault, strategy, amount, strategist, gov, whale, Strat
     # Put some funds into current strategy
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
+    strategy.setCrvRouter(0)
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount

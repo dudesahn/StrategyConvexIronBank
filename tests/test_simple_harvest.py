@@ -9,6 +9,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
     assert token.balanceOf(vault) == amount
 
     # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
+    strategy.setCrvRouter(0)
     strategy.setOptimal(0)
 
     # harvest, store asset amount
