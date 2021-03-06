@@ -34,12 +34,12 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
     new_assets_dai = vault.totalAssets()
     new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
     new_gauge_balanceOf_voter = gauge.balanceOf(voter)
-    print("\nOld Vault totalAssets: ".format(old_assets_dai))
-    print("\nNew Vault totalAssets: ".format(new_assets_dai))
-    print("\nOld Proxy balanceOf gauge: ".format(old_proxy_balanceOf_gauge))
-    print("\nNew Proxy balanceOf gauge: ".format(new_proxy_balanceOf_gauge))
-    print("\nOld gauge balanceOf voter: ".format(old_gauge_balanceOf_voter))
-    print("\nNew gauge balanceOf voter: ".format(new_gauge_balanceOf_voter))
+    print("\nOld Vault totalAssets: ", old_assets_dai)
+    print("\nNew Vault totalAssets: ", new_assets_dai)
+    print("\nOld Proxy balanceOf gauge: ", old_proxy_balanceOf_gauge)
+    print("\nNew Proxy balanceOf gauge: ", new_proxy_balanceOf_gauge)
+    print("\nOld gauge balanceOf voter: ", old_gauge_balanceOf_voter)
+    print("\nNew gauge balanceOf voter: ", new_gauge_balanceOf_voter)
     
     # There are two ways to check gauge token balances. Either call from the gauge token contract gauge.balanceOf(voter), or call strategyProxy.balanceOf(gauge)
     
