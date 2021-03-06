@@ -57,17 +57,17 @@ def rando(accounts):
     yield accounts[5]
 
 @pytest.fixture
-def reserve(accounts):
-    # this is the gauge contract, holds >99% of pool tokens
-    yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)
+def gauge(accounts):
+    # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale, as well for calling functions
+    yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)    
 
 @pytest.fixture
-def whale(accounts, token, reserve):
+def whale(accounts, token, gauge):
     # Totally in it for the tech
     # Has 10% of tokens (was in the ICO)
     a = accounts[6]
     bal = token.totalSupply() // 10
-    token.transfer(a, bal, {"from": reserve})
+    token.transfer(a, bal, {"from": gauge})
     yield a
     
 @pytest.fixture
