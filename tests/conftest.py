@@ -2,9 +2,6 @@ import pytest
 from brownie import config
 from brownie import Contract
 
-
-# Would be good to test out swapping out the type of funds to sell
-
 # Define relevant tokens and contracts in this section
 
 @pytest.fixture
