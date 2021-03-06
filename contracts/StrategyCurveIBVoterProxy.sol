@@ -36,7 +36,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
-    bool public checkLiqGauge = true;
+    uint256 public checkLiqGauge = 0;
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
@@ -127,7 +127,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         //when migrated to we will sometimes have liquidity gauge balance.
         //this should be withdrawn and added to proxy
-        if (checkLiqGauge) {
+        if (checkLiqGauge == 0) {
             uint256 liqGaugeBal = IGauge(gauge).balanceOf(address(this));
 
             if (liqGaugeBal > 0) {
@@ -198,8 +198,20 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         curveProxy = ICurveStrategyProxy(_proxy);
     }
 
-    function updateCheckLiqGauge(bool _checkLiqGauge) external onlyAuthorized {
+    function updateCheckLiqGauge(uint256 _checkLiqGauge) external onlyAuthorized {
         checkLiqGauge = _checkLiqGauge;
+        if (_checkLiqGauge == 0) {
+            checkLiqGauge = 0;
+        } else if (_checkLiqGauge == 1) {
+            checkLiqGauge = 1;
+        } else {
+            require(false, "incorrect value");
+        }
+
+        ICrvV3 crv =
+            ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
+        crv.approve(crvRouter, uint256(-1));
+        crv.approve(voter, uint256(-1));
     }
 
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
