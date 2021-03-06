@@ -25,7 +25,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     ICurveStrategyProxy public curveProxy = ICurveStrategyProxy(address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)); // Yearn's Updated v3 StrategyProxy
     
     
-    uint256 public optimal = 0;
+//    uint256 public optimal = 0;
 
     ICurveFi public crvIBpool = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
     address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter    
@@ -85,24 +85,24 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
             _sell(crvRemainder);
 
-            if (optimal == 0) {            
+       //     if (optimal == 0) {            
 	            IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
                 uint256 daiBalance = dai.balanceOf(address(this));
-                crvIBpool.add_liquidity([daiBalance, 0, 0], 0, true);
-            }
+         //       crvIBpool.add_liquidity([daiBalance, 0, 0], 0, true);
+          //  }
 
-            if (optimal == 1) {
+            // if (optimal == 1) {
 		        IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
                 uint256 usdcBalance = usdc.balanceOf(address(this));
-                crvIBpool.add_liquidity([0, usdcBalance, 0], 0, true);
-            }
+               // crvIBpool.add_liquidity([0, usdcBalance, 0], 0, true);
+           // }
 
-            if (optimal == 2) {
+           // if (optimal == 2) {
 	            IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6        
                 uint256 usdtBalance = usdt.balanceOf(address(this));
-                crvIBpool.add_liquidity([0, 0, usdtBalance], 0, true);
-            }
-
+             //   crvIBpool.add_liquidity([0, 0, usdtBalance], 0, true);
+          //  }
+                 crvIBpool.add_liquidity([daiBalance, usdcBalance, usdtBalance], 0, true);
             _profit = want.balanceOf(address(this));
         }
 
@@ -234,7 +234,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             crvPathDai[1] = address(weth);
             crvPathDai[2] = address(dai);
             crvPath = crvPathDai;
-            optimal = 0;
+       //     optimal = 0;
             dai.safeApprove(address(crvIBpool), uint256(-1));
             crv.approve(crvRouter, uint256(-1));
             crv.approve(voter, uint256(-1));
@@ -248,7 +248,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             crvPathUsdc[1] = address(weth);
             crvPathUsdc[2] = address(usdc);
             crvPath = crvPathUsdc;        
-            optimal = 1;
+       //     optimal = 1;
             usdc.safeApprove(address(crvIBpool), uint256(-1));
         } else if (_optimal == 2) {
     	    address[] memory crvPathUsdt;
@@ -260,7 +260,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             crvPathUsdt[1] = address(weth);
             crvPathUsdt[2] = address(usdt);
             crvPath = crvPathUsdt;
-            optimal = 2;
+      //      optimal = 2;
             usdt.safeApprove(address(crvIBpool), uint256(-1));
         } else {
             require(false, "incorrect token");
