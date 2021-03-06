@@ -10,11 +10,11 @@ def test_change_debt(gov, token, vault, strategy, strategist, amount, half, whal
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
-    assert token.balanceOf(strategy.address) == 5_000
+    assert strategyProxy.balanceOf(gauge) == 5_000
 
-    vault.updateStrategyDebtRatio(strategy.address, amount, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy.address, 10_000, {"from": gov})
     strategy.harvest({"from": strategist})
-    assert token.balanceOf(strategy.address) == amount
+    assert strategyProxy.balanceOf(gauge) == 10_000
 
     # In order to pass this tests, you will need to implement prepareReturn.
     # TODO: uncomment the following lines.
