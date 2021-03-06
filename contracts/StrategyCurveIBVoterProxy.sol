@@ -20,7 +20,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     using SafeMath for uint256;
 
     address public constant gauge =
-        address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by curveProxy
+        address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by Yearn's voter
     ICurveStrategyProxy public curveProxy =
         ICurveStrategyProxy(
             address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)
