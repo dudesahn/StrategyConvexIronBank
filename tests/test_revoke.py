@@ -1,4 +1,4 @@
-def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist, whale):
+def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist, whale, gauge, strategyProxy, voter):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
