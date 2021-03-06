@@ -5,7 +5,7 @@ from brownie import Contract
 #       Show that nothing is lost!
 
 
-def test_migration(token, vault, strategy, amount, strategist, gov):
+def test_migration(token, vault, strategy, amount, strategist, gov, whale):
     # Put some funds into current strategy
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
