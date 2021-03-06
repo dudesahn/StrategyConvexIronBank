@@ -1,11 +1,10 @@
 import brownie
 from brownie import Contract
 
-def test_change_debt(gov, token, vault, strategy, strategist, amount, whale):
+def test_change_debt(gov, token, vault, strategy, strategist, amount, half, whale):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
-    half = 100000000000
     vault.updateStrategyDebtRatio(strategy.address, half, {"from": gov})
     strategy.setCrvRouter(0)
     strategy.setOptimal(0)

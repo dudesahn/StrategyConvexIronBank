@@ -89,7 +89,12 @@ def amount(token, whale):
     # set the amount that our whale friend is going to throw around; pocket change
     amount = token.balanceOf(whale) * 0.1
     yield amount    
-    
+
+@pytest.fixture
+def half(token, whale):
+    # set the amount that is half of what our whale friend wants to deposit
+    half = token.balanceOf(whale) * 0.05
+    yield half    
 
 # Set definitions for vault and strategy
 
