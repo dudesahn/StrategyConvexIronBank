@@ -9,7 +9,7 @@ def test_emergency_exit(accounts, token, vault, strategy, strategist, amount, wh
     strategy.harvest({"from": strategist})
     assert curve_proxy.balanceOf(gauge) == amount
 
-    # set emergency and exit
+    # set emergency and exit, then confirm that the 
     strategy.setEmergencyExit()
     strategy.harvest({"from": strategist})
-    assert curve_proxy.balanceOf(gauge) == 0
+    assert strategy.estimatedTotalAssets() == 0
