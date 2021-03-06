@@ -44,8 +44,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
         want.safeApprove(address(curveProxy), uint256(-1));
-        crv.approve(crvRouter, uint256(-1));
-        crv.approve(voter, uint256(-1));
 	
     }
 
@@ -238,6 +236,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             crvPath = crvPathDai;
             optimal = 0;
             dai.safeApprove(address(crvIBpool), uint256(-1));
+            crv.approve(crvRouter, uint256(-1));
+            crv.approve(voter, uint256(-1));
         } else if (_optimal == 1) {
     	    address[] memory crvPathUsdc;
             ICrvV3 memory crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
