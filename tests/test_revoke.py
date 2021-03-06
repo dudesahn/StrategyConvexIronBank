@@ -1,7 +1,7 @@
-def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist):
+def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist, whale):
     # Deposit to the vault and harvest
-    token.approve(vault.address, amount, {"from": gov})
-    vault.deposit(amount, {"from": gov})
+    token.approve(vault, amount, {"from": whale})
+    vault.deposit(amount, {"from": whale})
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
@@ -11,14 +11,14 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strateg
     assert token.balanceOf(vault.address) == amount
 
 
-def test_revoke_strategy_from_strategy(token, vault, strategy, amount, gov, strategist):
+def test_revoke_strategy_from_strategy(token, vault, strategy, amount, strategist, whale):
     # Deposit to the vault and harvest
-    token.approve(vault.address, amount, {"from": gov})
-    vault.deposit(amount, {"from": gov})
+    token.approve(vault, amount, {"from": whale})
+    vault.deposit(amount, {"from": whale})
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 
     strategy.setEmergencyExit()
     strategy.harvest({"from": strategist})
-    assert token.balanceOf(vault.address) == amount
+    assert token.balanceOf(vault) == amount
