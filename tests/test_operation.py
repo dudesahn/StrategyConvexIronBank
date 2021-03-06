@@ -5,7 +5,7 @@ from brownie import Contract
 # **** TEST ALL CONTRACT FUNCTIONS
 
 
-def test_operation(token, vault, strategy, strategist, amount, whale, gauge):
+def test_operation(token, vault, strategy, strategist, amount, whale, gauge, curve_proxy):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
     token.approve(vault, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
