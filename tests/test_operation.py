@@ -5,7 +5,7 @@ from brownie import Contract
 # **** TEST ALL CONTRACT FUNCTIONS
 
 
-def test_operation(token, vault, strategy, strategist, amount, whale, gauge, curve_proxy):
+def test_operation(token, vault, strategy, strategist, amount, whale, gauge, curve_proxy, chain):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
     token.approve(vault, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
@@ -14,9 +14,30 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, cur
     # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
     strategy.setOptimal(0)
 
-    # harvest
+    # harvest, store asset amount
     strategy.harvest({"from": strategist})
+    old_assets = vault.totalAssets()
     assert curve_proxy.balanceOf(gauge) == amount
+
+    # simulate a month of earnings
+    chain.sleep(2592000)
+    chain.mine(1)
+
+    # harvest after a month, store new asset amount
+    strategy.harvest({"from": strategist})
+    new_assets = vault.totalAssets()
+    assert curve_proxy.balanceOf(gauge) > amount
+    
+    
+    genericStateOfStrat(strategy, currency, vault)
+    genericStateOfVault(vault, currency)
+
+    # Display estimated APR based on the past month
+    print("\nEstimated APR: ", "{:.2%}".format(((vault.totalAssets()-assets)*12)/(assets)))
+    
+    
+    
+
 
 #     set optimal to USDC
 #     strategy.setOptimal(1)
