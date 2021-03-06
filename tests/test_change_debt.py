@@ -5,14 +5,14 @@ def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyPro
     # Deposit to the vault and harvest
     token.approve(vault.address, 10000000000000000000, {"from": whale})
     vault.deposit(10000000000000000000, {"from": whale})
-    vault.updateStrategyDebtRatio(strategy.address, 5000000000000000000, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy, 5000000000000000000, {"from": gov})
     strategy.setCrvRouter(0)
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
     assert strategyProxy.balanceOf(gauge) == 5000000000000000000
 
-    vault.updateStrategyDebtRatio(strategy.address, 10000000000000000000, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy, 10000000000000000000, {"from": gov})
     strategy.harvest({"from": strategist})
     assert strategyProxy.balanceOf(gauge) == 10000000000000000000
 
