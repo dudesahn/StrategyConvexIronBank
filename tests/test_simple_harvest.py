@@ -2,7 +2,7 @@ import brownie
 from brownie import Contract
 
 
-def test_operation(token, vault, strategy, strategist, amount, whale, gauge, strategyProxy, chain, voter):
+def test_simple_harvest(token, vault, strategy, strategist, amount, whale, gaugeIB, strategyProxy, chain, voter):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
     token.approve(vault, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
@@ -15,9 +15,9 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
     # harvest, store asset amount
     strategy.harvest({"from": strategist})
     old_assets_dai = vault.totalAssets()
-    assert strategyProxy.balanceOf(gauge) == amount
+    assert strategyProxy.balanceOf(gaugeIB) == amount
     assert old_assets_dai == amount
-    assert old_assets_dai == strategyProxy.balanceOf(gauge)
+    assert old_assets_dai == strategyProxy.balanceOf(gaugeIB)
 
     # simulate a month of earnings
     chain.sleep(2592000)
