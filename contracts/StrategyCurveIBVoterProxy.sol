@@ -76,7 +76,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             curveProxy.harvest(gauge);
 
             ICrvV3 crv =
-                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
+                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
             uint256 crvBalance = crv.balanceOf(address(this));
             uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
             IERC20(address(crv)).safeTransfer(voter, _keepCRV);
@@ -87,21 +87,21 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
             if (optimal == 0) {
                 IERC20 dai =
-                    IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
+                    IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
                 uint256 daiBalance = dai.balanceOf(address(this));
                 pool.add_liquidity([daiBalance, 0, 0], 0, true);
             }
 
             if (optimal == 1) {
                 IERC20 usdc =
-                    IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
+                    IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
                 uint256 usdcBalance = usdc.balanceOf(address(this));
                 pool.add_liquidity([0, usdcBalance, 0], 0, true);
             }
 
             if (optimal == 2) {
                 IERC20 usdt =
-                    IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6
+                    IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
                 uint256 usdtBalance = usdt.balanceOf(address(this));
                 pool.add_liquidity([0, 0, usdtBalance], 0, true);
             }
@@ -219,7 +219,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         }
 
         ICrvV3 crv =
-            ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
+            ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
         crv.approve(crvRouter, uint256(-1));
         crv.approve(voter, uint256(-1));
     }
@@ -232,11 +232,11 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         if (_optimal == 0) {
             address[] memory crvPathDai;
             ICrvV3 crv =
-                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
+                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
             IERC20 weth =
-                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
+                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
             IERC20 dai =
-                IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F)); // 1e18
+                IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
             crvPathDai = new address[](3);
             crvPathDai[0] = address(crv);
             crvPathDai[1] = address(weth);
@@ -247,11 +247,11 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         } else if (_optimal == 1) {
             address[] memory crvPathUsdc;
             ICrvV3 crv =
-                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
+                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
             IERC20 weth =
-                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
+                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
             IERC20 usdc =
-                IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)); // 1e6
+                IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
             crvPathUsdc = new address[](3);
             crvPathUsdc[0] = address(crv);
             crvPathUsdc[1] = address(weth);
@@ -262,11 +262,11 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         } else if (_optimal == 2) {
             address[] memory crvPathUsdt;
             ICrvV3 crv =
-                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52)); // 1e18
+                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
             IERC20 weth =
-                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)); // 1e18
+                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
             IERC20 usdt =
-                IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7)); // 1e6
+                IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
             crvPathUsdt = new address[](3);
             crvPathUsdt[0] = address(crv);
             crvPathUsdt[1] = address(weth);
