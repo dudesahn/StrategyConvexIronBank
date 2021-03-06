@@ -3,7 +3,7 @@ from brownie import Contract
 
 def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyProxy, gauge):
     # Deposit to the vault and harvest
-    token.approve(vault.address, 10_000, {"from": whale})
+    token.approve(vault.address, 10000000000000000000, {"from": whale})
     vault.deposit(10000000000000000000, {"from": whale})
     vault.updateStrategyDebtRatio(strategy.address, 5000000000000000000, {"from": gov})
     strategy.setCrvRouter(0)
