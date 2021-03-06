@@ -25,6 +25,11 @@ def dai():
 def voter():
     # this is yearn's veCRV voter, where all gauge tokens are held (for v2 curve gauges that are tokenized)
     yield Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")    
+    
+@pytest.fixture
+def gauge():
+    # this is yearn's veCRV voter, where all gauge tokens are held (for v2 curve gauges that are tokenized)
+    yield Contract("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F")   
 
 # Define any accounts in this section
 
@@ -63,17 +68,17 @@ def rando(accounts):
     yield accounts[5]
 
 @pytest.fixture
-def gauge(accounts):
-    # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale, as well for calling functions
+def reserve(accounts):
+    # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale, as well for calling functions above as gauge
     yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)         
 
 @pytest.fixture
-def whale(accounts, token, gauge):
+def whale(accounts, token,reserve):
     # Totally in it for the tech
     # Has 10% of tokens (was in the ICO)
     a = accounts[6]
     bal = token.totalSupply() // 10
-    token.transfer(a, bal, {"from": gauge})
+    token.transfer(a, bal, {"from":reserve})
     yield a
 
 
@@ -89,7 +94,8 @@ def amount(token, whale):
 # Set definitions for vault and strategy
 
 @pytest.fixture
-def curve_proxy(interface):
+def strategyProxy(interface):
+    # This is Yearn's StrategyProxy contract, overlord of the Curve world
     yield interface.ICurveStrategyProxy("0x9a165622a744C20E3B2CB443AeD98110a33a231b")
 
 @pytest.fixture
@@ -102,10 +108,10 @@ def vault(pm, gov, rewards, guardian, management, token):
     yield vault
 
 @pytest.fixture
-def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov, curve_proxy):
+def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov, strategyProxy):
     strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.setKeeper(keeper)
-    curve_proxy.approveStrategy(strategy.crvIBgauge(), strategy, {"from": gov})
+    strategyProxy.approveStrategy(strategy.crvIBgauge(), strategy, {"from": gov})
     vault.addStrategy(strategy, 10_000, 0,  2 ** 256 -1, 1_000, {"from": gov})
     yield strategy
 
