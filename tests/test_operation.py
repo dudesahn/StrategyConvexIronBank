@@ -34,8 +34,8 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
     # There are two ways to check gauge token balances. Either call from the gauge token contract gauge.balanceOf(voter), or call strategyProxy.balanceOf(gauge)
     
     # assert strategyProxy.balanceOf(gauge) > amount
-    assert gauge.balanceOf(voter) == new_assets_dai
-    assert gauge.balanceOf(voter) == strategyProxy.balanceOf(gauge)
+    assert strategyProxy.balanceOf(gauge) == new_assets_dai
+    # assert gauge.balanceOf(voter) == strategyProxy.balanceOf(gauge)
     # assert strategyProxy.balanceOf(gauge) == new_assets_dai
     assert new_assets_dai > old_assets_dai
    
