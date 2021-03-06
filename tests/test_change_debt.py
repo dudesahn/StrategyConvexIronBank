@@ -1,10 +1,10 @@
 import brownie
 from brownie import Contract
 
-def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyProxy, gauge):
+def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyProxy, gauge, amount):
     # Deposit to the vault and harvest
-    token.approve(vault.address, 10000000000000000000, {"from": whale})
-    vault.deposit(10000000000000000000, {"from": whale})
+    token.approve(vault.address, amount, {"from": whale})
+    vault.deposit(amount, {"from": whale})
     
     # debtRatio is in BPS (aka, max is 10,000, which represents 100%), and is a fraction of the funds that can be in the strategy
     vault.updateStrategyDebtRatio(strategy, 5000, {"from": gov})
@@ -12,11 +12,12 @@ def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyPro
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
-    assert strategyProxy.balanceOf(gauge) == 5000000000000000000
-
+    assert strategyProxy.balanceOf(gauge) == amount / 2
+    
+    # set DebtRatio back to 100%
     vault.updateStrategyDebtRatio(strategy, 10000, {"from": gov})
     strategy.harvest({"from": strategist})
-    assert strategyProxy.balanceOf(gauge) == 10000000000000000000
+    assert strategyProxy.balanceOf(gauge) == amount
 
     # In order to pass this tests, you will need to implement prepareReturn.
     # TODO: uncomment the following lines.
