@@ -13,7 +13,7 @@ def test_migration(token, vault, strategy, amount, strategist, gov, whale, Strat
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 
-    # migrate to a new strategy
+    # migrate to a new strategy, but can effectively re-deploy existing strategy to serve as second strategy
     new_strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.migrate(new_strategy.address, {"from": gov})
     assert new_strategy.estimatedTotalAssets() == amount
