@@ -7,6 +7,7 @@ def test_change_debt(gov, token, vault, strategy, strategist, amount, whale):
     vault.deposit(amount, {"from": whale})
     half = amount / 2
     vault.updateStrategyDebtRatio(strategy.address, half, {"from": gov})
+    strategy.setCrvRouter(0)
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
 
