@@ -40,8 +40,9 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gauge, str
     new_strategy_balance = token.balanceOf(strategy)
     new_estimated_total_assets = strategy.estimatedTotalAssets()
     new_vault_balance = token.balanceOf(vault)
+    assert old_assets_dai > strategyProxy.balanceOf(gauge)
+
     
-    errorbug
     
     # Check for any assets only in the vault, not in the strategy
     print("\nOld Vault Holdings: ", old_vault_balance)
