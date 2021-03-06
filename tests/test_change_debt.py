@@ -14,7 +14,7 @@ def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyPro
 
     assert strategyProxy.balanceOf(gauge) == 5000000000000000000
 
-    vault.updateStrategyDebtRatio(strategy, 10000000000000000000, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy, 10000, {"from": gov})
     strategy.harvest({"from": strategist})
     assert strategyProxy.balanceOf(gauge) == 10000000000000000000
 
