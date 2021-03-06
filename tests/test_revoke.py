@@ -15,6 +15,7 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strateg
     old_vault_balance = token.balanceOf(vault)
 
     vault.revokeStrategy(strategy.address, {"from": gov})
+    strategy.harvest({"from": strategist})
     
     new_assets_dai = vault.totalAssets()
     new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
@@ -23,7 +24,7 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strateg
     new_estimated_total_assets = strategy.estimatedTotalAssets()
     new_vault_balance = token.balanceOf(vault)
     
-            # Check for any assets only in the vault, not in the strategy
+    # Check for any assets only in the vault, not in the strategy
     print("\nOld Vault Holdings: ", old_vault_balance)
     print("\nNew Vault Holdings: ", new_vault_balance)  
     
@@ -46,7 +47,6 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strateg
     print("\nNew gauge balanceOf voter: ", new_gauge_balanceOf_voter)
     
     
-    strategy.harvest({"from": strategist})
     assert token.balanceOf(vault) == amount
 
 
@@ -62,31 +62,5 @@ def test_revoke_strategy_from_strategy(token, vault, strategy, amount, strategis
     strategy.setEmergencyExit()
     strategy.harvest({"from": strategist})
     assert token.balanceOf(vault) == amount
-    
-    
-    old_assets_dai = vault.totalAssets()
-    old_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
-    old_gauge_balanceOf_voter = gauge.balanceOf(voter)
-    old_strategy_balance = token.balanceOf(strategy)
-    old_estimated_total_assets = strategy.estimatedTotalAssets()
-    old_vault_balance = token.balanceOf(vault)
-    assert strategyProxy.balanceOf(gauge) == amount
-    assert old_assets_dai == amount
-    assert old_assets_dai == strategyProxy.balanceOf(gauge)
-
-    # simulate a month of earnings
-    chain.sleep(2592000)
-    chain.mine(1)
-
-    # harvest after a month, store new asset amount
-    strategy.harvest({"from": strategist})
-    # tx.call_trace(True)
-    new_assets_dai = vault.totalAssets()
-    new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
-    new_gauge_balanceOf_voter = gauge.balanceOf(voter)
-    new_strategy_balance = token.balanceOf(strategy)
-    new_estimated_total_assets = strategy.estimatedTotalAssets()
-    new_vault_balance = token.balanceOf(vault)
-    assert old_assets_dai == strategyProxy.balanceOf(gauge)
     
     
