@@ -185,12 +185,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         view
         override
         returns (address[] memory)
-    {
-        address[] memory protected = new address[](1);
-        protected[0] = gauge;
-
-        return protected;
-    }
+    {}
 
     // setter functions
 
