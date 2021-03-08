@@ -46,6 +46,5 @@ interface ICurveStrategyProxy {
     //        proxy.execute(crv, 0, abi.encodeWithSignature("transfer(address,uint256)", msg.sender, _balance));
 
     function claim(address recipient) external;
-}
 
 }
