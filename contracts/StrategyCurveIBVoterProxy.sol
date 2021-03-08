@@ -37,6 +37,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
     uint256 public checkLiqGauge = 1; // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
+    uint256 public constant CHECK_LIQ_GAUGE_TRUE = 1;
+    uint256 public constant CHECK_LIQ_GAUGE_FALSE = 0;
+    uint256 public constant USE_SUSHI = 1;
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
@@ -127,7 +130,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         //when migrated to we will sometimes have liquidity gauge balance.
         //this should be withdrawn and added to proxy
-        if (checkLiqGauge == 1) {
+        if (checkLiqGauge == CHECK_LIQ_GAUGE_TRUE) {
             uint256 liqGaugeBal = IGauge(gauge).balanceOf(address(this));
 
             if (liqGaugeBal > 0) {
@@ -201,11 +204,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // checkLiqGauge FALSE = 0;
     function updateCheckLiqGauge(uint256 _checkLiqGauge) external onlyAuthorized {
         checkLiqGauge = _checkLiqGauge;
-        if (_checkLiqGauge == 0) {
-            uint256 CHECK_LIQ_GAUGE_FALSE = 0;
+        if (_checkLiqGauge == CHECK_LIQ_GAUGE_FALSE) {
             checkLiqGauge = CHECK_LIQ_GAUGE_FALSE;
-        } else if (_checkLiqGauge == 1) {
-            uint256 CHECK_LIQ_GAUGE_TRUE = 1;
+        } else if (_checkLiqGauge == CHECK_LIQ_GAUGE_TRUE) {
             checkLiqGauge = CHECK_LIQ_GAUGE_TRUE;
         } else {
             require(false, "incorrect value");
@@ -221,7 +222,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // Use SushiSwap for CRV Router = 1;
     // Use Uniswap for CRV Router = 0 (or anything else);
     function setCrvRouter(uint256 _isSushiswap) external onlyAuthorized {
-        if (_isSushiswap == 1) {
+        if (_isSushiswap == USE_SUSHI) {
             address sushiswapRouter =
                 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
             crvRouter = sushiswapRouter;
