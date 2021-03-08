@@ -203,14 +203,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // checkLiqGauge TRUE = 1;
     // checkLiqGauge FALSE = 0;
     function updateCheckLiqGauge(uint256 _checkLiqGauge) external onlyAuthorized {
+        require(_checkLiqGauge <= CHECK_LIQ_GAUGE_TRUE, "incorrect value");
         checkLiqGauge = _checkLiqGauge;
-        if (_checkLiqGauge == CHECK_LIQ_GAUGE_FALSE) {
-            checkLiqGauge = CHECK_LIQ_GAUGE_FALSE;
-        } else if (_checkLiqGauge == CHECK_LIQ_GAUGE_TRUE) {
-            checkLiqGauge = CHECK_LIQ_GAUGE_TRUE;
-        } else {
-            require(false, "incorrect value");
-        }
     }
 
     // Set the amount of CRV to be locked in Yearn's veCRV voter from each harvest. Default is 10%.
