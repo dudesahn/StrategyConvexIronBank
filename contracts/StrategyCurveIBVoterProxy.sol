@@ -36,7 +36,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
-    uint256 public checkLiqGauge = 0;
+    uint256 public checkLiqGauge = 1; // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
@@ -127,7 +127,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         //when migrated to we will sometimes have liquidity gauge balance.
         //this should be withdrawn and added to proxy
-        if (checkLiqGauge == 0) {
+        if (checkLiqGauge == 1) {
             uint256 liqGaugeBal = IGauge(gauge).balanceOf(address(this));
 
             if (liqGaugeBal > 0) {
@@ -163,6 +163,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         return (_liquidatedAmount, _loss);
     }
 
+    // Sells our harvested CRV into the selected output (DAI, USDC, or USDT). Adds a timeout period of 1800 seconds.
     function _sell(uint256 _amount) internal {
         IUniswapV2Router02(crvRouter).swapExactTokensForTokens(
             _amount,
@@ -188,41 +189,45 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     {}
 
     // setter functions
+    // These functions are useful for setting parameters of the strategy that may need to be adjusted.
 
+    // Use to update Yearn's StrategyProxy contract as needed in case of upgrades. 
     function setProxy(address _proxy) external onlyGovernance {
         curveProxy = ICurveStrategyProxy(_proxy);
     }
-
+    
+    // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
+    // checkLiqGauge TRUE = 1;
+    // checkLiqGauge FALSE = 0;
     function updateCheckLiqGauge(uint256 _checkLiqGauge) external onlyAuthorized {
         checkLiqGauge = _checkLiqGauge;
         if (_checkLiqGauge == 0) {
-            checkLiqGauge = 0;
+            uint256 constant CHECK_LIQ_GAUGE_FALSE = 0;
+            checkLiqGauge = CHECK_LIQ_GAUGE_FALSE;
         } else if (_checkLiqGauge == 1) {
-            checkLiqGauge = 1;
+            uint256 constant CHECK_LIQ_GAUGE_TRUE = 1;
+            checkLiqGauge = CHECK_LIQ_GAUGE_TRUE;
         } else {
             require(false, "incorrect value");
         }
-
-        ICrvV3 crv =
-            ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
-        crv.approve(crvRouter, uint256(-1));
-        crv.approve(voter, uint256(-1));
     }
 
+    // Set the amount of CRV to be locked in Yearn's veCRV voter from each harvest. Default is 10%.
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
         keepCRV = _keepCRV;
     }
 
+    // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
+    // Use SushiSwap for CRV Router = 1;
+    // Use Uniswap for CRV Router = 0 (or anything else);
     function setCrvRouter(uint256 _isSushiswap) external onlyAuthorized {
-        if (_isSushiswap == 0) {
+        if (_isSushiswap == 1) {
             address sushiswapRouter =
                 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
             crvRouter = sushiswapRouter;
-        } else if (_isSushiswap == 1) {
+        } else {
             address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
             crvRouter = uniswapRouter;
-        } else {
-            require(false, "incorrect value");
         }
 
         ICrvV3 crv =
@@ -231,10 +236,13 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         crv.approve(voter, uint256(-1));
     }
 
+    // Set Yearn's veCRV voter address, useful in case of contract upgrade
     function setVoter(address _voter) external onlyGovernance {
         voter = _voter;
     }
 
+    // Set optimal token to sell harvested CRV into for depositing back to Iron Bank Curve pool. 
+    // Default is DAI, but can be set to USDC or USDT as needed by strategist or governance.
     function setOptimal(uint256 _optimal) external onlyAuthorized {
         if (_optimal == 0) {
             address[] memory crvPathDai;
