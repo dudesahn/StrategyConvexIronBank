@@ -202,10 +202,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function updateCheckLiqGauge(uint256 _checkLiqGauge) external onlyAuthorized {
         checkLiqGauge = _checkLiqGauge;
         if (_checkLiqGauge == 0) {
-            uint256 constant CHECK_LIQ_GAUGE_FALSE = 0;
+            uint256 CHECK_LIQ_GAUGE_FALSE = 0;
             checkLiqGauge = CHECK_LIQ_GAUGE_FALSE;
         } else if (_checkLiqGauge == 1) {
-            uint256 constant CHECK_LIQ_GAUGE_TRUE = 1;
+            uint256 CHECK_LIQ_GAUGE_TRUE = 1;
             checkLiqGauge = CHECK_LIQ_GAUGE_TRUE;
         } else {
             require(false, "incorrect value");
