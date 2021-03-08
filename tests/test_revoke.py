@@ -40,8 +40,8 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strateg
     strategy.harvest({"from": strategist})
     
     new_assets_dai = vault.totalAssets()
-    new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gauge)
-    new_gauge_balanceOf_voter = gauge.balanceOf(voter)
+    new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
+    new_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
     new_strategy_balance = token.balanceOf(strategy)
     new_estimated_total_assets = strategy.estimatedTotalAssets()
     new_vault_balance = token.balanceOf(vault)
