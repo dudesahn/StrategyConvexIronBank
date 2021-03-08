@@ -60,22 +60,6 @@ interface ICurveFi {
         uint256 _from_amount
     ) external view returns (uint256);
 
-    function swapExactTokensForETH(
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path,
-        address to,
-        uint256 deadline
-    ) external returns (uint256[] memory amounts);
-
-    function swapExactTokensForTokens(
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path,
-        address to,
-        uint256 deadline
-    ) external returns (uint256[] memory amounts);
-
     function calc_token_amount(uint256[2] calldata amounts)
         external
         view
