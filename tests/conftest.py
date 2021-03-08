@@ -83,7 +83,7 @@ def whale(accounts, token ,reserve):
     
 @pytest.fixture
 def amount(token, whale):
-    # set the amount that our whale friend is going to throw around; pocket change
+    # set the amount that our whale friend is going to throw around; pocket change, 10% of stack
     amount = token.balanceOf(whale) * 0.1
     yield amount
 

@@ -6,24 +6,24 @@ from brownie import config
 
 @pytest.fixture
 def reserve(accounts):
-    # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale, as well for calling functions above as gauge
+    # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale_operation, as well for calling functions above as gauge
     yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)         
 
 @pytest.fixture
-def whale(accounts, token ,reserve):
+def whale_operation(accounts, token ,reserve):
     # Totally in it for the tech
-    # Has 10% of tokens (was in the ICO)
+    # Has 5% of tokens (was in the ICO)
     a = accounts[6]
-    bal = token.totalSupply() // 10
+    bal = token.totalSupply() // 20
     token.transfer(a, bal, {"from":reserve})
     yield a
 
 
 
-def test_operation(token, vault, strategy, strategist, amount, whale, gaugeIB, strategyProxy, chain, voter):
-    # Deposit to the vault, whale approves 10% of his stack and deposits it
-    token.approve(vault, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+def test_operation(token, vault, strategy, strategist, amount, whale_operation, gaugeIB, strategyProxy, chain, voter):
+    # Deposit to the vault, whale_operation approves 10% of his stack and deposits it
+    token.approve(vault, amount, {"from": whale_operation})
+    vault.deposit(amount, {"from": whale_operation})
     assert token.balanceOf(vault) == amount
 
     # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first), also set crvRouter to approve voter and set router
@@ -134,5 +134,5 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gaugeIB, s
     strategy.tend()
 
     # withdrawal
-    vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) != 0
+    vault.withdraw({"from": whale_operation})
+    assert token.balanceOf(whale_operation) != 0

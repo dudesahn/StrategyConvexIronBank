@@ -10,11 +10,11 @@ def reserve(accounts):
     yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)         
 
 @pytest.fixture
-def whale(accounts, token ,reserve):
+def whale_migration(accounts, token ,reserve):
     # Totally in it for the tech
-    # Has 10% of tokens (was in the ICO)
+    # Has 5% of tokens (was in the ICO)
     a = accounts[6]
-    bal = token.totalSupply() // 10
+    bal = token.totalSupply() // 20
     token.transfer(a, bal, {"from":reserve})
     yield a
 
