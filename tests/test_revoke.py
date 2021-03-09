@@ -4,7 +4,7 @@ from brownie import config
 
 def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, whale, gaugeIB, strategyProxy, voter):
     # Deposit to the vault and harvest
-    amount = token.balanceOf(whale) * 0.1        
+    amount = token.balanceOf(whale)      
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
     strategy.setCrvRouter(0)
@@ -25,12 +25,12 @@ def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, wha
 
     # withdrawal to return test state to normal
     vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount * 10
+    assert token.balanceOf(whale) >= amount
 
 
 def test_revoke_strategy_from_strategy(token, vault, strategy, strategist, whale, gov):
     # Deposit to the vault and harvest
-    amount = token.balanceOf(whale) * 0.1        
+    amount = token.balanceOf(whale)    
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
     strategy.setCrvRouter(0)

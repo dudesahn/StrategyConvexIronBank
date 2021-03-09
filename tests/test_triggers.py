@@ -4,7 +4,7 @@ from brownie import config
 
 def test_triggers(gov, vault, strategy, token, strategist, whale):
     # Deposit to the vault and harvest
-    amount = token.balanceOf(whale) * 0.1        
+    amount = token.balanceOf(whale)     
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
     vault.updateStrategyDebtRatio(strategy.address, 5_000, {"from": gov})

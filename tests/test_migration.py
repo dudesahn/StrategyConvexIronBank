@@ -9,7 +9,7 @@ from brownie import config
 
 def test_migration(token, vault, strategy, strategist, gov, whale, StrategyCurveIBVoterProxy):
     # Put some funds into current strategy
-    amount3 = token.balanceOf(whale) * 0.1    
+    amount3 = token.balanceOf(whale)
     token.approve(vault.address, amount3, {"from": whale})
     vault.deposit(amount3, {"from": whale})
     strategy.setCrvRouter(0)

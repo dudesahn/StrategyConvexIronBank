@@ -4,7 +4,7 @@ from brownie import config
 
 def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyProxy, gaugeIB):
     # Deposit to the vault and harvest
-    amount1 = token.balanceOf(whale) / 10
+    amount1 = token.balanceOf(whale)
     token.approve(vault.address, amount1, {"from": whale})
     vault.deposit(amount1, {"from": whale})
     
