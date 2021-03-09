@@ -2,10 +2,11 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-def test_simple_harvest(token, vault, strategy, strategist, amount, whale_simple, gaugeIB, strategyProxy, chain, voter):
-    # Deposit to the vault, whale_simple approves 10% of his stack and deposits it
-    token.approve(vault, amount, {"from": whale_simple})
-    vault.deposit(amount, {"from": whale_simple})
+def test_simple_harvest(token, vault, strategy, strategist, amount, whale, gaugeIB, strategyProxy, chain, voter):
+    # Deposit to the vault, whale approves 10% of his stack and deposits it
+    amount = token.balanceOf(whale) * 0.1        
+    token.approve(vault, amount, {"from": whale})
+    vault.deposit(amount, {"from": whale})
     assert token.balanceOf(vault) == amount
 
     # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
@@ -37,5 +38,5 @@ def test_simple_harvest(token, vault, strategy, strategist, amount, whale_simple
     strategy.tend()
 
     # withdrawal to return test state to normal
-    vault.withdraw({"from": whale_simple})
-    assert token.balanceOf(whale_simple) != 0
+    vault.withdraw({"from": whale})
+    assert token.balanceOf(whale) >= amount * 10
