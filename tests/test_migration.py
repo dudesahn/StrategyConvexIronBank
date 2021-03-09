@@ -1,6 +1,5 @@
 import brownie
 from brownie import Contract
-import pytest
 from brownie import config
     
 # TODO: Add tests that show proper migration of the strategy to a newer one

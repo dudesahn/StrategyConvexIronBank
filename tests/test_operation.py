@@ -4,7 +4,8 @@ from brownie import config
 
 def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
-    amount4 = token.balanceOf(whale) * 0.1        
+    amount = token.balanceOf(whale) * 0.1
+            
     token.approve(vault, amount4, {"from": whale})
     vault.deposit(amount4, {"from": whale})
     assert token.balanceOf(vault) == amount4
@@ -118,4 +119,4 @@ def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyP
 
     # withdrawal to return test state to normal
     vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount * 10
+    assert token.balanceOf(whale) >= amount4 * 10

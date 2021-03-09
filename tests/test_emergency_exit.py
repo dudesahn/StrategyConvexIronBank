@@ -1,6 +1,5 @@
 import brownie
 from brownie import Contract
-import pytest
 from brownie import config        
 
 def test_emergency_exit(accounts, token, vault, strategy, strategist, whale, strategyProxy, gaugeIB):
