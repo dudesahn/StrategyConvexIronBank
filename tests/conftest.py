@@ -69,22 +69,104 @@ def reserve(accounts):
     # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale, as well for calling functions above as gauge
     yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)         
 
+# Whale accounts. Use a different whale for each test to allow them to all be run simultaneously. 
+
 @pytest.fixture
 def whale(accounts, token ,reserve):
     # Totally in it for the tech
-    # Has 10% of tokens (was in the ICO)
+    # Has 20% of tokens (was in the ICO)
     a = accounts[6]
     bal = token.totalSupply() // 10
     token.transfer(a, bal, {"from":reserve})
     yield a
 
+@pytest.fixture
+def whale_revoke(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 5% of tokens (was in the ICO)
+    a = accounts[7]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
+
+@pytest.fixture
+def whale_emergency(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 5% of tokens (was in the ICO)
+    a = accounts[8]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
+
+@pytest.fixture
+def whale_migration(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 5% of tokens (was in the ICO)
+    a = accounts[9]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
+
+@pytest.fixture
+def whale_operation(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 5% of tokens (was in the ICO)
+    a = accounts[10]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
+
+@pytest.fixture
+def whale_revoke(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 5% of tokens (was in the ICO)
+    a = accounts[11]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
+    
+@pytest.fixture
+def whale_simple(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 5% of tokens (was in the ICO)
+    a = accounts[12]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
+
+@pytest.fixture
+def whale_sweep(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 5% of tokens (was in the ICO)
+    a = accounts[13]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
+
+@pytest.fixture
+def whale_triggers(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 5% of tokens (was in the ICO)
+    a = accounts[14]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
+    
+@pytest.fixture
+def whale_change_debt(accounts, token ,reserve):
+    # Totally in it for the tech
+    # Has 10% of tokens (was in the ICO)
+    a = accounts[15]
+    bal = token.totalSupply() // 20
+    token.transfer(a, bal, {"from":reserve})
+    yield a
 
 # Define the amount of tokens that our whale will be using
     
 @pytest.fixture
 def amount(token, whale):
-    # set the amount that our whale friend is going to throw around; pocket change, 10% of stack
-    amount = token.balanceOf(whale) * 0.1
+    # set the amount that our whale friend is going to throw around; pocket change, 5% of stack
+    amount = token.balanceOf(whale) * 0.05
     yield amount
 
 # Set definitions for vault and strategy

@@ -3,16 +3,6 @@ from brownie import Contract
 import pytest
 from brownie import config        
 
-@pytest.fixture
-def whale_emergency(accounts, token ,reserve):
-    # Totally in it for the tech
-    # Has 5% of tokens (was in the ICO)
-    a = accounts[6]
-    bal = token.totalSupply() // 20
-    token.transfer(a, bal, {"from":reserve})
-    yield a
-
-
 def test_emergency_exit(accounts, token, vault, strategy, strategist, amount, whale_emergency, strategyProxy, gaugeIB):
     # Deposit to the vault, confirm that funds are in the gauge
     token.approve(vault.address, amount, {"from": whale_emergency})
@@ -26,3 +16,7 @@ def test_emergency_exit(accounts, token, vault, strategy, strategist, amount, wh
     strategy.setEmergencyExit()
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == 0
+    
+    # withdrawal to return test state to normal
+    vault.withdraw({"from": whale_emergency})
+    assert token.balanceOf(whale_emergency) != 0

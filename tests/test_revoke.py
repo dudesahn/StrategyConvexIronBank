@@ -1,22 +1,6 @@
 import brownie
 from brownie import Contract
-import pytest
 from brownie import config
-
-
-@pytest.fixture
-def reserve(accounts):
-    # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale_revoke, as well for calling functions above as gauge
-    yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)         
-
-@pytest.fixture
-def whale_revoke(accounts, token ,reserve):
-    # Totally in it for the tech
-    # Has 5% of tokens (was in the ICO)
-    a = accounts[6]
-    bal = token.totalSupply() // 20
-    token.transfer(a, bal, {"from":reserve})
-    yield a
 
 def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist, whale_revoke, gaugeIB, strategyProxy, voter):
     # Deposit to the vault and harvest
@@ -26,50 +10,17 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strateg
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
-    
-    old_assets_dai = vault.totalAssets()
-    old_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
-    old_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
-    old_strategy_balance = token.balanceOf(strategy)
-    old_estimated_total_assets = strategy.estimatedTotalAssets()
-    old_vault_balance = token.balanceOf(vault)
 
     vault.revokeStrategy(strategy.address, {"from": gov})
     assert strategy.estimatedTotalAssets() == amount
     assert token.balanceOf(vault) == 0
+    
+    # This final harvest will collect funds earned from 1 block into vault, as well as amount balance. 
+    # Unfortunately, there is no way to account for this balance, since you can't check claimable CRV via smart contract.
     strategy.harvest({"from": strategist})
     
-    new_assets_dai = vault.totalAssets()
-    new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
-    new_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
-    new_strategy_balance = token.balanceOf(strategy)
-    new_estimated_total_assets = strategy.estimatedTotalAssets()
-    new_vault_balance = token.balanceOf(vault)
-    
-    # Check for any assets only in the vault, not in the strategy
-    print("\nOld Vault Holdings: ", old_vault_balance)
-    print("\nNew Vault Holdings: ", new_vault_balance)  
-    
-    # Check total assets in the strategy
-    print("\nOld Strategy totalAssets: ", old_estimated_total_assets)
-    print("\nNew Strategy totalAssets: ", new_estimated_total_assets)  
-    
-    # Check total assets in the vault + strategy
-    print("\nOld Vault totalAssets: ", old_assets_dai)
-    print("\nNew Vault totalAssets: ", new_assets_dai)
-    
-    # Want token should never be in the strategy    
-    print("\nOld Strategy balanceOf: ", old_strategy_balance)
-    print("\nNew Strategy balanceOf: ", new_strategy_balance)
-    
-    # These two calls should return the same value, and should update after every harvest call
-    print("\nOld Proxy balanceOf gauge: ", old_proxy_balanceOf_gauge)
-    print("\nNew Proxy balanceOf gauge: ", new_proxy_balanceOf_gauge)
-    print("\nOld gauge balanceOf voter: ", old_gauge_balanceOf_voter)
-    print("\nNew gauge balanceOf voter: ", new_gauge_balanceOf_voter)
-    
-    
-    assert token.balanceOf(vault) == amount
+    # So instead of ==, we set this to >= since we know it will have some small amount gained
+    assert token.balanceOf(vault) >= amount
 
 
 def test_revoke_strategy_from_strategy(token, vault, strategy, amount, strategist, whale_revoke, gov):
@@ -85,3 +36,6 @@ def test_revoke_strategy_from_strategy(token, vault, strategy, amount, strategis
     strategy.harvest({"from": strategist})
     assert token.balanceOf(vault) == amount
     
+    # withdrawal to return test state to normal
+    vault.withdraw({"from": whale_revoke})
+    assert token.balanceOf(whale_revoke) != 0

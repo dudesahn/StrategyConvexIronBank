@@ -1,22 +1,6 @@
 import brownie
 from brownie import Contract
-import pytest
 from brownie import config
-
-
-@pytest.fixture
-def reserve(accounts):
-    # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale_triggers, as well for calling functions above as gauge
-    yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)         
-
-@pytest.fixture
-def whale_triggers(accounts, token ,reserve):
-    # Totally in it for the tech
-    # Has 5% of tokens (was in the ICO)
-    a = accounts[6]
-    bal = token.totalSupply() // 20
-    token.transfer(a, bal, {"from":reserve})
-    yield a
 
 
 def test_triggers(gov, vault, strategy, token, amount, strategist, whale_triggers):
@@ -29,3 +13,7 @@ def test_triggers(gov, vault, strategy, token, amount, strategist, whale_trigger
     strategy.harvest({"from": strategist})
     strategy.harvestTrigger(0)
     strategy.tendTrigger(0)
+    
+    # withdrawal to return test state to normal
+    vault.withdraw({"from": whale_triggers})
+    assert token.balanceOf(whale_triggers) != 0

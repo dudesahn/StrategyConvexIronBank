@@ -3,30 +3,15 @@ from brownie import Contract
 import pytest
 from brownie import config
 
-
-@pytest.fixture
-def reserve(accounts):
-    # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale, as well for calling functions above as gauge
-    yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)         
-
-@pytest.fixture
-def whale_migration(accounts, token ,reserve):
-    # Totally in it for the tech
-    # Has 5% of tokens (was in the ICO)
-    a = accounts[6]
-    bal = token.totalSupply() // 20
-    token.transfer(a, bal, {"from":reserve})
-    yield a
-
 # TODO: Add tests that show proper migration of the strategy to a newer one
 #       Use another copy of the strategy to simulate the migration
 #       Show that nothing is lost!
 
 
-def test_migration(token, vault, strategy, amount, strategist, gov, whale, StrategyCurveIBVoterProxy):
+def test_migration(token, vault, strategy, amount, strategist, gov, whale_migration, StrategyCurveIBVoterProxy):
     # Put some funds into current strategy
-    token.approve(vault.address, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+    token.approve(vault.address, amount, {"from": whale_migration})
+    vault.deposit(amount, {"from": whale_migration})
     strategy.setCrvRouter(0)
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
@@ -37,3 +22,9 @@ def test_migration(token, vault, strategy, amount, strategist, gov, whale, Strat
     strategy.migrate(new_strategy.address, {"from": gov})
     assert new_strategy.estimatedTotalAssets() == amount
     assert strategy.estimatedTotalAssets() == 0
+    
+    # withdrawal to return test state to normal
+    vault.withdraw({"from": whale_migration})
+    assert token.balanceOf(whale_migration) != 0
+    
+    
