@@ -2,18 +2,18 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-def test_operation(token, vault, strategy, strategist, amount, whale, gaugeIB, strategyProxy, chain, voter):
+def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
-    amount = token.balanceOf(whale) * 0.1        
-    token.approve(vault, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
-    assert token.balanceOf(vault) == amount
+    amount4 = token.balanceOf(whale) * 0.1        
+    token.approve(vault, amount4, {"from": whale})
+    vault.deposit(amount4, {"from": whale})
+    assert token.balanceOf(vault) == amount4
 
     # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first), also set crvRouter to approve voter and set router
     strategy.setCrvRouter(0)
     strategy.setOptimal(0)
 
-    # harvest, store asset amount
+    # harvest, store asset amount4
     strategy.harvest({"from": strategist})
     # tx.call_trace(True)
     old_assets_dai = vault.totalAssets()
@@ -22,15 +22,15 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gaugeIB, s
     old_strategy_balance = token.balanceOf(strategy)
     old_estimated_total_assets = strategy.estimatedTotalAssets()
     old_vault_balance = token.balanceOf(vault)
-    assert strategyProxy.balanceOf(gaugeIB) == amount
-    assert old_assets_dai == amount
+    assert strategyProxy.balanceOf(gaugeIB) == amount4
+    assert old_assets_dai == amount4
     assert old_assets_dai == strategyProxy.balanceOf(gaugeIB)
 
     # simulate a month of earnings
     chain.sleep(2592000)
     chain.mine(1)
 
-    # harvest after a month, store new asset amount
+    # harvest after a month, store new asset amount4
     strategy.harvest({"from": strategist})
     # tx.call_trace(True)
     new_assets_dai = vault.totalAssets()
@@ -67,7 +67,7 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gaugeIB, s
     
     # There are two ways to check gauge token balances. Either call from the gauge token contract gauge.balanceOf(voter), or call strategyProxy.balanceOf(gauge)
     
-    # assert strategyProxy.balanceOf(gauge) > amount
+    # assert strategyProxy.balanceOf(gauge) > amount4
     # assert strategyProxy.balanceOf(gauge) == new_assets_dai
     # assert gauge.balanceOf(voter) == strategyProxy.balanceOf(gauge)
     # assert strategyProxy.balanceOf(gauge) == new_assets_dai
@@ -88,10 +88,10 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gaugeIB, s
     chain.sleep(2592000)
     chain.mine(1)
 
-    # harvest after a month, store new asset amount after switch to USDC
+    # harvest after a month, store new asset amount4 after switch to USDC
     strategy.harvest({"from": strategist})
     new_assets_usdc = vault.totalAssets()
-    assert strategyProxy.balanceOf(gaugeIB) > amount
+    assert strategyProxy.balanceOf(gaugeIB) > amount4
     assert new_assets_usdc > new_assets_dai
 
     # Display estimated APR based on the past month
@@ -104,10 +104,10 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gaugeIB, s
     chain.sleep(2592000)
     chain.mine(1)
 
-    # harvest after a month, store new asset amount
+    # harvest after a month, store new asset amount4
     strategy.harvest({"from": strategist})
     new_assets_usdt = vault.totalAssets()
-    assert strategyProxy.balanceOf(gaugeIB) > amount
+    assert strategyProxy.balanceOf(gaugeIB) > amount4
     assert new_assets_usdt > new_assets_usdc
     
     # Display estimated APR based on the past month
@@ -118,4 +118,4 @@ def test_operation(token, vault, strategy, strategist, amount, whale, gaugeIB, s
 
     # withdrawal to return test state to normal
     vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount * 10
+    assert token.balanceOf(whale) >= amount4 * 10

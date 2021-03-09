@@ -2,7 +2,7 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strategist, whale, gaugeIB, strategyProxy, voter):
+def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, whale, gaugeIB, strategyProxy, voter):
     # Deposit to the vault and harvest
     amount = token.balanceOf(whale) * 0.1        
     token.approve(vault.address, amount, {"from": whale})
@@ -28,7 +28,7 @@ def test_revoke_strategy_from_vault(token, vault, strategy, amount, gov, strateg
     assert token.balanceOf(whale) >= amount * 10
 
 
-def test_revoke_strategy_from_strategy(token, vault, strategy, amount, strategist, whale, gov):
+def test_revoke_strategy_from_strategy(token, vault, strategy, strategist, whale, gov):
     # Deposit to the vault and harvest
     amount = token.balanceOf(whale) * 0.1        
     token.approve(vault.address, amount, {"from": whale})

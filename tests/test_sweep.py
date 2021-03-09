@@ -2,7 +2,7 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-def test_sweep(gov, vault, strategy, token, amount, whale):
+def test_sweep(gov, vault, strategy, token, whale):
     # Strategy want token doesn't work
     amount = token.balanceOf(whale) * 0.1        
     token.transfer(strategy.address, amount, {"from": whale})

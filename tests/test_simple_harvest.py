@@ -2,7 +2,7 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-def test_simple_harvest(token, vault, strategy, strategist, amount, whale, gaugeIB, strategyProxy, chain, voter):
+def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
     amount = token.balanceOf(whale) * 0.1        
     token.approve(vault, amount, {"from": whale})

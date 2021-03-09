@@ -2,7 +2,7 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-def test_triggers(gov, vault, strategy, token, amount, strategist, whale):
+def test_triggers(gov, vault, strategy, token, strategist, whale):
     # Deposit to the vault and harvest
     amount = token.balanceOf(whale) * 0.1        
     token.approve(vault.address, amount, {"from": whale})

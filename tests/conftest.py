@@ -82,11 +82,11 @@ def whale(accounts, token ,reserve):
 
 # Define the amount of tokens that our whale will be using
     
-@pytest.fixture
-def amount(token, whale):
-    # set the amount that our whale friend is going to throw around; pocket change, 5% of stack
-    amount = token.balanceOf(whale) * 0.05
-    yield amount
+# @pytest.fixture
+# def amount(token, whale):
+#     # set the amount that our whale friend is going to throw around; pocket change, 5% of stack
+#     amount = token.balanceOf(whale) * 0.05
+#     yield amount
 
 # Set definitions for vault and strategy
 

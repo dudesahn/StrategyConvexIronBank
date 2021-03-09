@@ -3,14 +3,15 @@ from brownie import Contract
 import pytest
 from brownie import config        
 
-def test_emergency_exit(accounts, token, vault, strategy, strategist, amount, whale, strategyProxy, gaugeIB):
+def test_emergency_exit(accounts, token, vault, strategy, strategist, whale, strategyProxy, gaugeIB):
     # Deposit to the vault, confirm that funds are in the gauge
-    token.approve(vault.address, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+    amount2 = token.balanceOf(whale) * 0.1
+    token.approve(vault.address, amount2, {"from": whale})
+    vault.deposit(amount2, {"from": whale})
     strategy.setCrvRouter(0)
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
-    assert strategyProxy.balanceOf(gaugeIB) == amount
+    assert strategyProxy.balanceOf(gaugeIB) == amount2
 
     # set emergency and exit, then confirm that the strategy has no funds
     strategy.setEmergencyExit()
@@ -19,4 +20,4 @@ def test_emergency_exit(accounts, token, vault, strategy, strategist, amount, wh
     
     # withdrawal to return test state to normal
     vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount * 10
+    assert token.balanceOf(whale) >= amount2 * 10

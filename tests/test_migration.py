@@ -8,24 +8,24 @@ from brownie import config
 #       Show that nothing is lost!
 
 
-def test_migration(token, vault, strategy, amount, strategist, gov, whale, StrategyCurveIBVoterProxy):
+def test_migration(token, vault, strategy, strategist, gov, whale, StrategyCurveIBVoterProxy):
     # Put some funds into current strategy
-    amount = token.balanceOf(whale) * 0.1    
-    token.approve(vault.address, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+    amount3 = token.balanceOf(whale) * 0.1    
+    token.approve(vault.address, amount3, {"from": whale})
+    vault.deposit(amount3, {"from": whale})
     strategy.setCrvRouter(0)
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
-    assert strategy.estimatedTotalAssets() == amount
+    assert strategy.estimatedTotalAssets() == amount3
 
     # migrate to a new strategy, but can effectively re-deploy existing strategy to serve as second strategy
     new_strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.migrate(new_strategy.address, {"from": gov})
-    assert new_strategy.estimatedTotalAssets() == amount
+    assert new_strategy.estimatedTotalAssets() == amount3
     assert strategy.estimatedTotalAssets() == 0
     
     # withdrawal to return test state to normal
     vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount * 10
+    assert token.balanceOf(whale) >= amount3 * 10
     
     
