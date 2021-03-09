@@ -95,14 +95,14 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
                 pool.add_liquidity([daiBalance, 0, 0], 0, true);
             }
 
-            if (optimal == 1) {
+            else if (optimal == 1) {
                 IERC20 usdc =
                     IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
                 uint256 usdcBalance = usdc.balanceOf(address(this));
                 pool.add_liquidity([0, usdcBalance, 0], 0, true);
             }
 
-            if (optimal == 2) {
+            else (optimal == 2) {
                 IERC20 usdt =
                     IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
                 uint256 usdtBalance = usdt.balanceOf(address(this));
