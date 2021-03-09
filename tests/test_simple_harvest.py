@@ -4,7 +4,7 @@ from brownie import config
 
 def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
-    amount = token.balanceOf(whale) * 0.1        
+    amount = token.balanceOf(whale)   
     token.approve(vault, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
     assert token.balanceOf(vault) == amount
@@ -37,6 +37,6 @@ def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, stra
     # tend()
     strategy.tend()
 
-    # withdrawal to return test state to normal
+    # withdrawal to return test state to normal, we should have made a profit
     vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount * 10
+    assert token.balanceOf(whale) >= amount

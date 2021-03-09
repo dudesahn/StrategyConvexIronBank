@@ -4,7 +4,7 @@ from brownie import config
 
 def test_sweep(gov, vault, strategy, token, whale):
     # Strategy want token doesn't work
-    amount = token.balanceOf(whale) * 0.1        
+    amount = token.balanceOf(whale)       
     token.transfer(strategy.address, amount, {"from": whale})
     assert token.address == strategy.want()
     assert token.balanceOf(strategy) > 0

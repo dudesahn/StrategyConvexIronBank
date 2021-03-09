@@ -23,7 +23,7 @@ def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, wha
     # So instead of ==, we set this to >= since we know it will have some small amount gained
     assert token.balanceOf(vault) >= amount
 
-    # withdrawal to return test state to normal
+    # withdrawal to return test state to normal, we made a profit
     vault.withdraw({"from": whale})
     assert token.balanceOf(whale) >= amount
 
