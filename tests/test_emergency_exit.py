@@ -17,7 +17,3 @@ def test_emergency_exit(accounts, token, vault, strategy, strategist, whale, str
     strategy.setEmergencyExit()
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == 0
-    
-    # withdrawal to return test state to normal
-    vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount2 * 10

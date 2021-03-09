@@ -118,4 +118,4 @@ def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyP
 
     # withdrawal to return test state to normal
     vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount4 * 10
+    assert token.balanceOf(whale) >= amount * 10

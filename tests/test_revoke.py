@@ -41,7 +41,3 @@ def test_revoke_strategy_from_strategy(token, vault, strategy, strategist, whale
     strategy.setEmergencyExit({"from": gov})
     strategy.harvest({"from": strategist})
     assert token.balanceOf(vault) == amount
-    
-    # withdrawal to return test state to normal
-    vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount * 10

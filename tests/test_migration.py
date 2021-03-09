@@ -24,8 +24,4 @@ def test_migration(token, vault, strategy, strategist, gov, whale, StrategyCurve
     assert new_strategy.estimatedTotalAssets() == amount3
     assert strategy.estimatedTotalAssets() == 0
     
-    # withdrawal to return test state to normal
-    vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount3 * 10
-    
     

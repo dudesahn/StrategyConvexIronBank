@@ -4,7 +4,7 @@ from brownie import config
 
 def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyProxy, gaugeIB):
     # Deposit to the vault and harvest
-    amount1 = token.balanceOf(whale) * 0.1
+    amount1 = token.balanceOf(whale) / 10
     token.approve(vault.address, amount1, {"from": whale})
     vault.deposit(amount1, {"from": whale})
     
@@ -20,7 +20,3 @@ def test_change_debt(gov, token, vault, strategy, strategist, whale, strategyPro
     vault.updateStrategyDebtRatio(strategy, 10000, {"from": gov})
     strategy.harvest({"from": strategist})
     assert strategyProxy.balanceOf(gaugeIB) == amount1
-
-    # withdrawal to return test state to normal
-    vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount1 * 10
