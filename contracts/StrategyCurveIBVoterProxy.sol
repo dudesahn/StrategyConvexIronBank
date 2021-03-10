@@ -104,7 +104,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
                 curve.add_liquidity([0, usdcBalance, 0], 0, true);
             }
 
-            else (optimal == 2) {
+            else {
                 IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
                 uint256 usdtBalance = usdt.balanceOf(address(this));
                 curve.add_liquidity([0, 0, usdtBalance], 0, true);
@@ -222,20 +222,20 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
             IERC20 weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
             crvPath = new address[](3);
-            crvPathDai[0] = address(crv);
-            crvPathDai[1] = address(weth);
+            crvPath[0] = address(crv);
+            crvPath[1] = address(weth);
             
         if (_optimal == 0) {
             IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
-            crvPathDai[2] = address(dai);
+            crvPath[2] = address(dai);
             optimal = 0;
         } else if (_optimal == 1) {
             IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
-            crvPathUsdc[2] = address(usdc);
+            crvPath[2] = address(usdc);
             optimal = 1;
         } else if (_optimal == 2) {
             IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
-            crvPathUsdt[2] = address(usdt);
+            crvPath[2] = address(usdt);
             optimal = 2;
         } else {
             require(false, "incorrect token");
