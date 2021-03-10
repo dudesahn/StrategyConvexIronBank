@@ -4,7 +4,7 @@ from brownie import config
 
 def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
-    amount = 100000000000000000000
+    amount = token.balanceOf(whale)  
     token.approve(vault, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
     assert token.balanceOf(vault) == amount

@@ -117,12 +117,15 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             proxy.withdraw(gauge, address(want), Math.min(stakedBal, _debtOutstanding));
 
             _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)));
+            
+            // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
+        	uint256 assets = estimatedTotalAssets();
+        	uint256 debt = vault.strategies(address(this)).totalDebt;
+        	_loss = debt - assets;   
+            
         }
         
-        // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
-        uint256 assets = estimatedTotalAssets();
-        uint256 debt = vault.strategies(address(this)).totalDebt;
-        _loss = debt - assets;
+
         
         return (_profit, _loss, _debtPayment);
     }
@@ -145,15 +148,20 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     function liquidatePosition(uint256 _amountNeeded) internal override returns (uint256 _liquidatedAmount, uint256 _loss)
     {
-        uint256 wantBal = want.balanceOf(address(this));
-        uint256 stakedBal = proxy.balanceOf(gauge);
-
+            uint256 wantBal = want.balanceOf(address(this));
         if (_amountNeeded > wantBal) {
+            uint256 stakedBal = proxy.balanceOf(gauge);
             proxy.withdraw(gauge, address(want), Math.min(stakedBal, _amountNeeded - wantBal));
+            uint256 withdrawnBal = want.balanceOf(address(this));
+            _liquidatedAmount = Math.min(_amountNeeded, withdrawnBal);
+            
+            // if _amountNeeded != withdrawnBal, then we have an error
+            if ( _amountNeeded != withdrawnBal ) {
+                _loss = _amountNeeded - withdrawnBal;
+            }
+         	
         }
 
-        _liquidatedAmount = Math.min(_amountNeeded, want.balanceOf(address(this)));
-        _loss = _amountNeeded.sub(wantBal);
         return (_liquidatedAmount, _loss);
     }
 
