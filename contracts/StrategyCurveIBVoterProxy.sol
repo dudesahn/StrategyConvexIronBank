@@ -118,6 +118,12 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
             _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)));
         }
+        
+        // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
+        uint256 assets = estimatedTotalAssets();
+        uint256 debt = vault.strategies(address(this)).totalDebt;
+        _loss = debt - assets;
+        
         return (_profit, _loss, _debtPayment);
     }
 
@@ -143,14 +149,11 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         uint256 stakedBal = proxy.balanceOf(gauge);
 
         if (_amountNeeded > wantBal) {
-            proxy.withdraw(
-                gauge,
-                address(want),
-                Math.min(stakedBal, _amountNeeded - wantBal)
-            );
+            proxy.withdraw(gauge, address(want), Math.min(stakedBal, _amountNeeded - wantBal));
         }
 
         _liquidatedAmount = Math.min(_amountNeeded, want.balanceOf(address(this)));
+        _loss = _amountNeeded.sub(wantBal);
         return (_liquidatedAmount, _loss);
     }
 
