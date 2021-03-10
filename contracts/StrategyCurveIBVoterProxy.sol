@@ -29,6 +29,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address public crvRouter;
     address[] public crvPath;
 
+
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
     uint256 public checkLiqGauge = 1; // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
@@ -44,6 +45,22 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
         want.safeApprove(address(proxy), uint256(-1));
+        
+        // add approvals for crv on sushiswap and uniswap due to weird crv approval issues for setCrvRouter
+        // add approvals on all tokens
+        ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
+        IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
+        IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
+        IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
+
+        address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+        address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;   
+        crv.approve(uniswapRouter, uint256(-1));
+        crv.approve(sushiswapRouter, uint256(-1));
+        dai.safeApprove(address(curve), uint256(-1));
+        usdc.safeApprove(address(curve), uint256(-1));
+        usdt.safeApprove(address(curve), uint256(-1));
+        
     }
 
     function name() external view override returns (string memory) {
@@ -137,15 +154,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         return (_liquidatedAmount, _loss);
     }
 
-    // Sells our harvested CRV into the selected output (DAI, USDC, or USDT). Adds a timeout period of 1800 seconds.
+    // Sells our harvested CRV into the selected output (DAI, USDC, or USDT).
     function _sell(uint256 _amount) internal {
-        IUniswapV2Router02(crvRouter).swapExactTokensForTokens(
-            _amount,
-            uint256(0),
-            crvPath,
-            address(this),
-            now.add(1800)
-        );
+        IUniswapV2Router02(crvRouter).swapExactTokensForTokens(_amount, uint256(0), crvPath, address(this), now);
     }
 
     function prepareMigration(address _newStrategy) internal override {
@@ -188,18 +199,13 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // Use Uniswap for CRV Router = 0 (or anything else);
     function setCrvRouter(uint256 _isSushiswap) external onlyAuthorized {
         if (_isSushiswap == USE_SUSHI) {
-            address sushiswapRouter =
-                0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
+            address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
             crvRouter = sushiswapRouter;
         } else {
             address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
             crvRouter = uniswapRouter;
         }
 
-        ICrvV3 crv =
-            ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
-        crv.approve(crvRouter, uint256(-1));
-        crv.approve(voter, uint256(-1));
     }
 
     // Set Yearn's veCRV voter address, useful in case of contract upgrade
@@ -210,51 +216,24 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // Set optimal token to sell harvested CRV into for depositing back to Iron Bank Curve pool. 
     // Default is DAI, but can be set to USDC or USDT as needed by strategist or governance.
     function setOptimal(uint256 _optimal) external onlyAuthorized {
-        if (_optimal == 0) {
-            address[] memory crvPathDai;
-            ICrvV3 crv =
-                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
-            IERC20 weth =
-                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
-            IERC20 dai =
-                IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
-            crvPathDai = new address[](3);
+            ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
+            IERC20 weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
+            crvPath = new address[](3);
             crvPathDai[0] = address(crv);
             crvPathDai[1] = address(weth);
+            
+        if (_optimal == 0) {
+            IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
             crvPathDai[2] = address(dai);
-            crvPath = crvPathDai;
             optimal = 0;
-            dai.safeApprove(address(curve), uint256(-1));
         } else if (_optimal == 1) {
-            address[] memory crvPathUsdc;
-            ICrvV3 crv =
-                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
-            IERC20 weth =
-                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
-            IERC20 usdc =
-                IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
-            crvPathUsdc = new address[](3);
-            crvPathUsdc[0] = address(crv);
-            crvPathUsdc[1] = address(weth);
+            IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
             crvPathUsdc[2] = address(usdc);
-            crvPath = crvPathUsdc;
             optimal = 1;
-            usdc.safeApprove(address(curve), uint256(-1));
         } else if (_optimal == 2) {
-            address[] memory crvPathUsdt;
-            ICrvV3 crv =
-                ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
-            IERC20 weth =
-                IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
-            IERC20 usdt =
-                IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
-            crvPathUsdt = new address[](3);
-            crvPathUsdt[0] = address(crv);
-            crvPathUsdt[1] = address(weth);
+            IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
             crvPathUsdt[2] = address(usdt);
-            crvPath = crvPathUsdt;
             optimal = 2;
-            usdt.safeApprove(address(curve), uint256(-1));
         } else {
             require(false, "incorrect token");
         }
