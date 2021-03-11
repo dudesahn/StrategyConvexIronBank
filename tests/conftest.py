@@ -67,8 +67,13 @@ def rando(accounts):
 @pytest.fixture
 def reserve(accounts):
     # this is the gauge contract, holds >99% of pool tokens. use this to seed our whale, as well for calling functions above as gauge
-    yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)         
-
+    yield accounts.at("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F", force=True)     
+    
+@pytest.fixture
+def new_address(accounts):
+    # new account for voter and proxy tests
+    yield accounts.at("0xb5DC07e23308ec663E743B1196F5a5569E4E0555", force=True)
+        
 # Whale accounts
 
 @pytest.fixture
