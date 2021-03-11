@@ -218,7 +218,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         } else {
             crvRouter = uniswapRouter;
         }
-
     }
 
     // Set Yearn's veCRV voter address, useful in case of contract upgrade
