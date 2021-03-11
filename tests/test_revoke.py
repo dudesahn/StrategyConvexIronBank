@@ -7,7 +7,6 @@ def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, wha
     amount = token.balanceOf(whale)
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
-    strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 
@@ -36,7 +35,6 @@ def test_revoke_strategy_from_strategy(token, vault, strategy, strategist, whale
     amount = token.balanceOf(whale)
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
-    strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 

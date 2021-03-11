@@ -12,7 +12,6 @@ def test_migration(token, vault, strategy, strategist, gov, whale, StrategyCurve
     amount = token.balanceOf(whale)
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
-    strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 

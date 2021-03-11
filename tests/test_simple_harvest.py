@@ -9,9 +9,6 @@ def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, stra
     vault.deposit(amount, {"from": whale})
     assert token.balanceOf(vault) == amount
 
-    # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first)
-    strategy.setOptimal(0)
-
     # harvest, store asset amount
     strategy.harvest({"from": strategist})
     old_assets_dai = vault.totalAssets()

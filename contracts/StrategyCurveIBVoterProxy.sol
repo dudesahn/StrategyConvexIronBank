@@ -63,6 +63,11 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         usdc.safeApprove(address(curve), uint256(-1));
         usdt.safeApprove(address(curve), uint256(-1));
         
+        crvPath = new address[](3);
+        crvPath[0] = address(crv);
+        crvPath[1] = address(weth);
+        crvPath[2] = address(dai);
+        
     }
 
     function name() external view override returns (string memory) {
