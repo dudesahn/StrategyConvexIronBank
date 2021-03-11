@@ -5,7 +5,6 @@ from brownie import config
 def test_setters(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
 	# Test all other setter functions, using this address: 0x6b3595068778dd592e39a122f4f5a5cf09c90fe2
 	
-	
 	strategy.setProxy(0x6b3595068778dd592e39a122f4f5a5cf09c90fe2, {"from": gov})
 	assert strategy.proxy() = 0x6b3595068778dd592e39a122f4f5a5cf09c90fe2
 	

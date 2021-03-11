@@ -7,7 +7,6 @@ def test_emergency_exit(accounts, token, vault, strategy, strategist, whale, str
     amount = token.balanceOf(whale)
     token.approve(vault.address, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
-    strategy.setCrvRouter(0)
     strategy.setOptimal(0)
     strategy.harvest({"from": strategist})
     assert strategyProxy.balanceOf(gaugeIB) == amount
