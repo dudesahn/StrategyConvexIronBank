@@ -107,23 +107,29 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
                 uint256 usdtBalance = usdt.balanceOf(address(this));
                 curve.add_liquidity([0, 0, usdtBalance], 0, true);
             }
-            _profit = want.balanceOf(address(this));
         }
+            // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
+            uint256 assets = estimatedTotalAssets();
+        	uint256 debt = vault.strategies(address(this)).totalDebt;
+        
+        // if assets are greater than debt, things are working great!	
+        if (assets > debt) {  
+            _profit = want.balanceOf(address(this));
+            }
+        // if assets are less than debt, we are in trouble    
+        else {
+            _loss = debt.sub(assets);
+        	_profit = 0;            
+            }
 
+		// debtOustanding will only be > 0 in the event of revoking or lowering debtRatio of a strategy
         if (_debtOutstanding > 0) {
             uint256 stakedBal = proxy.balanceOf(gauge);
             proxy.withdraw(gauge, address(want), Math.min(stakedBal, _debtOutstanding));
 
             _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)));
             
-            // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
-        	uint256 assets = estimatedTotalAssets();
-        	uint256 debt = vault.strategies(address(this)).totalDebt;
-        	_loss = debt.sub(assets);   
-            
         }
-        
-
         
         return (_profit, _loss, _debtPayment);
     }
@@ -146,7 +152,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     function liquidatePosition(uint256 _amountNeeded) internal override returns (uint256 _liquidatedAmount, uint256 _loss)
     {
-            uint256 wantBal = want.balanceOf(address(this));
+        uint256 wantBal = want.balanceOf(address(this));
         if (_amountNeeded > wantBal) {
             uint256 stakedBal = proxy.balanceOf(gauge);
             proxy.withdraw(gauge, address(want), Math.min(stakedBal, _amountNeeded - wantBal));
