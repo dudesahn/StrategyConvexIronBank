@@ -169,7 +169,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             if ( _amountNeeded != withdrawnBal ) {
                 _loss = _amountNeeded.sub(withdrawnBal);
             }
-         	
         }
 
         return (_liquidatedAmount, _loss);
