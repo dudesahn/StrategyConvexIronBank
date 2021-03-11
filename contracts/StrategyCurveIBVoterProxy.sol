@@ -43,8 +43,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     uint256 public constant CHECK_LIQ_GAUGE_FALSE = 0;
     
     uint256 public constant USE_SUSHI = 1;
-    address constant sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
-    addresss constant uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;  
+    address constant sushiswapRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+    address constant uniswapRouter = address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);  
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
@@ -214,10 +214,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // Use Uniswap for CRV Router = 0 (or anything else);
     function setCrvRouter(uint256 _isSushiswap) external onlyAuthorized {
         if (_isSushiswap == USE_SUSHI) {
-            address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap
             crvRouter = sushiswapRouter;
         } else {
-            address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
             crvRouter = uniswapRouter;
         }
 
