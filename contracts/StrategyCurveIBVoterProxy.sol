@@ -28,19 +28,23 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
     address public crvRouter;
     address[] public crvPath;
-        ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
-        IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
-        IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
-        IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
-        address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
-        address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;  
+    
+    ICrvV3 constant crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
+    IERC20 constant weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
+    IERC20 constant dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
+    IERC20 constant usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
+    IERC20 constant usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
 
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
+    
     uint256 public checkLiqGauge = 1; // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
     uint256 public constant CHECK_LIQ_GAUGE_TRUE = 1;
     uint256 public constant CHECK_LIQ_GAUGE_FALSE = 0;
+    
     uint256 public constant USE_SUSHI = 1;
+    address constant sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+    addresss constant uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;  
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
@@ -53,9 +57,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         
         // add approvals for crv on sushiswap and uniswap due to weird crv approval issues for setCrvRouter
         // add approvals on all tokens
-
-
- 
         crv.approve(uniswapRouter, uint256(-1));
         crv.approve(sushiswapRouter, uint256(-1));
         dai.safeApprove(address(curve), uint256(-1));
@@ -84,7 +85,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         if (gaugeTokens > 0) {
             proxy.harvest(gauge);
 
-            ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
             uint256 crvBalance = crv.balanceOf(address(this));
             uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
             IERC20(address(crv)).safeTransfer(voter, _keepCRV);
@@ -94,19 +94,16 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             _sell(crvRemainder);
 
             if (optimal == 0) {
-                IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
                 uint256 daiBalance = dai.balanceOf(address(this));
                 curve.add_liquidity([daiBalance, 0, 0], 0, true);
             }
 
             else if (optimal == 1) {
-                IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
                 uint256 usdcBalance = usdc.balanceOf(address(this));
                 curve.add_liquidity([0, usdcBalance, 0], 0, true);
             }
 
             else {
-                IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
                 uint256 usdtBalance = usdt.balanceOf(address(this));
                 curve.add_liquidity([0, 0, usdtBalance], 0, true);
             }
@@ -122,7 +119,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
         	uint256 assets = estimatedTotalAssets();
         	uint256 debt = vault.strategies(address(this)).totalDebt;
-        	_loss = debt - assets;   
+        	_loss = debt.sub(assets);   
             
         }
         
@@ -158,7 +155,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             
             // if _amountNeeded != withdrawnBal, then we have an error
             if ( _amountNeeded != withdrawnBal ) {
-                _loss = _amountNeeded - withdrawnBal;
+                _loss = _amountNeeded.sub(withdrawnBal);
             }
          	
         }
@@ -228,22 +225,17 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // Set optimal token to sell harvested CRV into for depositing back to Iron Bank Curve pool. 
     // Default is DAI, but can be set to USDC or USDT as needed by strategist or governance.
     function setOptimal(uint256 _optimal) external onlyAuthorized {
-            ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
-            IERC20 weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
             crvPath = new address[](3);
             crvPath[0] = address(crv);
             crvPath[1] = address(weth);
             
         if (_optimal == 0) {
-            IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
             crvPath[2] = address(dai);
             optimal = 0;
         } else if (_optimal == 1) {
-            IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
             crvPath[2] = address(usdc);
             optimal = 1;
         } else if (_optimal == 2) {
-            IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
             crvPath[2] = address(usdt);
             optimal = 2;
         } else {
