@@ -167,7 +167,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             
             // if _amountNeeded != withdrawnBal, then we have an error
             if ( _amountNeeded != withdrawnBal ) {
-                _loss = _amountNeeded.sub(withdrawnBal);
+                uint256 assets = estimatedTotalAssets();
+                uint256 debt = vault.strategies(address(this)).totalDebt;
+                _loss = debt.sub(assets);
             }
         }
 
