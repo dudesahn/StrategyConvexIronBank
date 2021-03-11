@@ -114,8 +114,6 @@ def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyP
     # Display estimated APR based on the past month
     print("\nEstimated USDT APR: ", "{:.2%}".format(((new_assets_usdt-new_assets_usdc)*12)/(new_assets_usdc)))
 
-    # tend()
-    strategy.tend()
 
     # withdrawal to return test state to normal, showing we made a profit
     vault.withdraw({"from": whale})
