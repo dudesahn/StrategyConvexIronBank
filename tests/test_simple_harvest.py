@@ -33,6 +33,10 @@ def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, stra
     # Display estimated APR based on the past month
     print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai-old_assets_dai)*12)/(old_assets_dai)))
 
+    # wait to allow share price to reach full value (takes 6 hours as of 0.3.2)
+    chain.sleep(2592000)
+    chain.mine(1)
+
     # withdrawal to return test state to normal, we should have made a profit
     vault.withdraw({"from": whale})
     assert token.balanceOf(whale) >= amount

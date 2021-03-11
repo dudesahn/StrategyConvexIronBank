@@ -114,6 +114,10 @@ def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyP
     # Display estimated APR based on the past month
     print("\nEstimated USDT APR: ", "{:.2%}".format(((new_assets_usdt-new_assets_usdc)*12)/(new_assets_usdc)))
 
+    # wait to allow share price to reach full value (takes 6 hours as of 0.3.2)
+    chain.sleep(2592000)
+    chain.mine(1)
+
 
     # withdrawal to return test state to normal, showing we made a profit
     vault.withdraw({"from": whale})
