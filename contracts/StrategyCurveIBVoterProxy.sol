@@ -28,7 +28,12 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
     address public crvRouter;
     address[] public crvPath;
-
+        ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
+        IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
+        IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
+        IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
+        address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+        address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;  
 
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
@@ -48,13 +53,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         
         // add approvals for crv on sushiswap and uniswap due to weird crv approval issues for setCrvRouter
         // add approvals on all tokens
-        ICrvV3 crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
-        IERC20 dai = IERC20(address(0x6B175474E89094C44Da98b954EedeAC495271d0F));
-        IERC20 usdc = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
-        IERC20 usdt = IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
 
-        address sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
-        address uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;   
+
+ 
         crv.approve(uniswapRouter, uint256(-1));
         crv.approve(sushiswapRouter, uint256(-1));
         dai.safeApprove(address(curve), uint256(-1));
