@@ -3,12 +3,13 @@ from brownie import Contract
 from brownie import config
 
 
-def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
-    # Deposit to the vault, whale apes
-    amount = token.balanceOf(whale)
-
-    token.approve(vault, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter, rando):
+    # Deposit to the vault and harvest
+    amount = 100 * (10 ** 18)
+    token.transfer(rando, amount, {"from": whale})
+    startingRando = token.balanceOf(rando)
+    token.approve(vault.address, amount, {"from": rando})
+    vault.deposit(amount, {"from": rando})
     assert token.balanceOf(vault) == amount
 
     # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first), also set crvRouter to approve voter and set router
@@ -114,6 +115,8 @@ def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyP
     chain.sleep(2592000)
     chain.mine(1)
 
-    # withdrawal to return test state to normal, showing we made a profit
-    vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount
+    # give rando his money back, then he sends back to whale
+    vault.withdraw({"from": rando})    
+    assert token.balanceOf(rando) >= startingRando
+    endingRando = token.balanceOf(rando)
+    token.transfer(whale, endingRando, {"from": rando})  

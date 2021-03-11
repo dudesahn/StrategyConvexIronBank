@@ -3,11 +3,13 @@ from brownie import Contract
 from brownie import config
 
 
-def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
-    # Deposit to the vault, whale approves 10% of his stack and deposits it
-    amount = token.balanceOf(whale)
-    token.approve(vault, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter, rando):
+    # Deposit to the vault and harvest
+    amount = 100 * (10 ** 18)
+    token.transfer(rando, amount, {"from": whale})
+    startingRando = token.balanceOf(rando)
+    token.approve(vault.address, amount, {"from": rando})
+    vault.deposit(amount, {"from": rando})
     assert token.balanceOf(vault) == amount
 
     # harvest, store asset amount
@@ -34,6 +36,8 @@ def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, stra
     chain.sleep(2592000)
     chain.mine(1)
 
-    # withdrawal to return test state to normal, we should have made a profit
-    vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount
+    # give rando his money back, then he sends back to whale
+    vault.withdraw({"from": rando})    
+    assert token.balanceOf(rando) >= startingRando
+    endingRando = token.balanceOf(rando)
+    token.transfer(whale, endingRando, {"from": rando}) 

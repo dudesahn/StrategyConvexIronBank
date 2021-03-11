@@ -7,11 +7,13 @@ from brownie import config
 #       Show that nothing is lost!
 
 
-def test_migration(token, vault, strategy, strategist, gov, whale, StrategyCurveIBVoterProxy):
-    # Put some funds into current strategy
-    amount = token.balanceOf(whale)
-    token.approve(vault.address, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+def test_migration(token, vault, strategy, strategist, gov, whale, StrategyCurveIBVoterProxy, rando, chain):
+    # Deposit to the vault and harvest
+    amount = 100 * (10 ** 18)
+    token.transfer(rando, amount, {"from": whale})
+    startingRando = token.balanceOf(rando)
+    token.approve(vault.address, amount, {"from": rando})
+    vault.deposit(amount, {"from": rando})
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 
@@ -20,3 +22,9 @@ def test_migration(token, vault, strategy, strategist, gov, whale, StrategyCurve
     strategy.migrate(new_strategy.address, {"from": gov})
     assert new_strategy.estimatedTotalAssets() == amount
     assert strategy.estimatedTotalAssets() == 0
+    
+    # give rando his money back, then he sends back to whale
+    vault.withdraw({"from": rando})    
+    assert token.balanceOf(rando) >= startingRando
+    endingRando = token.balanceOf(rando)
+    token.transfer(whale, endingRando, {"from": rando})

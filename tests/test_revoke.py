@@ -3,11 +3,13 @@ from brownie import Contract
 from brownie import config
 
 
-def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, whale, gaugeIB, strategyProxy, voter, chain):
+def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, whale, gaugeIB, strategyProxy, voter, chain, rando):
     # Deposit to the vault and harvest
-    amount = token.balanceOf(whale)
-    token.approve(vault.address, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+    amount = 100 * (10 ** 18)
+    token.transfer(rando, amount, {"from": whale})
+    startingRando = token.balanceOf(rando)
+    token.approve(vault.address, amount, {"from": rando})
+    vault.deposit(amount, {"from": rando})
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 
@@ -26,19 +28,34 @@ def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, wha
     chain.sleep(2592000)
     chain.mine(1)
 
-    # withdrawal to return test state to normal, we made a profit
-    vault.withdraw({"from": whale})
-    assert token.balanceOf(whale) >= amount
+    # give rando his money back, then he sends back to whale
+    vault.withdraw({"from": rando})    
+    assert token.balanceOf(rando) >= startingRando
+    endingRando = token.balanceOf(rando)
+    token.transfer(whale, endingRando, {"from": rando})
 
 
-def test_revoke_strategy_from_strategy(token, vault, strategy, strategist, whale, gov):
+def test_revoke_strategy_from_strategy(token, vault, strategy, strategist, whale, gov, chain, rando):
     # Deposit to the vault and harvest
-    amount = token.balanceOf(whale)
-    token.approve(vault.address, amount, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+    amount = 100 * (10 ** 18)
+    token.transfer(rando, amount, {"from": whale})
+    startingRando = token.balanceOf(rando)
+    token.approve(vault.address, amount, {"from": rando})
+    vault.deposit(amount, {"from": rando})
     strategy.harvest({"from": strategist})
     assert strategy.estimatedTotalAssets() == amount
 
     strategy.setEmergencyExit({"from": gov})
     strategy.harvest({"from": strategist})
     assert token.balanceOf(vault) == amount
+
+    # wait to allow share price to reach full value (takes 6 hours as of 0.3.2)
+    chain.sleep(2592000)
+    chain.mine(1)
+    
+    # give rando his money back, then he sends back to whale
+    vault.withdraw({"from": rando})    
+    assert token.balanceOf(rando) >= startingRando
+    endingRando = token.balanceOf(rando)
+    token.transfer(whale, endingRando, {"from": rando})
+

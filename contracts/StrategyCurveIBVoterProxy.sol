@@ -66,7 +66,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         // add approvals on all tokens
         crv.approve(uniswapRouter, uint256(-1));
         crv.approve(sushiswapRouter, uint256(-1));
-        crv.approve(crvRouter, uint256(-1));
         crv.approve(voter, uint256(-1));
         dai.safeApprove(address(curve), uint256(-1));
         usdc.safeApprove(address(curve), uint256(-1));

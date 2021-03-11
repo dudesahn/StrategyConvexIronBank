@@ -130,7 +130,7 @@ def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov, strategy
     strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
     strategy.setKeeper(keeper)
     strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
-    vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
+    vault.addStrategy(strategy, 10000, 0, 2 ** 256 - 1, 1000, {"from": gov})
     yield strategy
 
 
