@@ -9,13 +9,13 @@ def test_setters(token, vault, strategy, strategist, whale, gaugeIB, strategyPro
 	assert strategy.proxy() == new_address
 	
 	strategy.updateCheckLiqGauge(0, {"from": gov})
-    assert strategy.checkLiqGauge() == 0
+	assert strategy.checkLiqGauge() == 0
 	
-    strategy.setKeepCRV(2000, {"from": gov})
-    assert strategy.keepCRV() > 1000
+	strategy.setKeepCRV(2000, {"from": gov})
+	assert strategy.keepCRV() > 1000
 	
 	strategy.setCrvRouter(0, {"from": gov})
-	assert strategy.crvRouter != 0
+	assert strategy.crvRouter != 1
 	
 	strategy.setVoter(new_address, {"from": gov})
 	assert strategy.voter() == new_address
