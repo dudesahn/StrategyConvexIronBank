@@ -2,6 +2,7 @@ import brownie
 from brownie import Contract
 from brownie import config
 
+
 def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, whale, gaugeIB, strategyProxy, voter, chain):
     # Deposit to the vault and harvest
     amount = token.balanceOf(whale)
@@ -13,11 +14,11 @@ def test_revoke_strategy_from_vault(token, vault, strategy, gov, strategist, wha
     vault.revokeStrategy(strategy.address, {"from": gov})
     assert strategy.estimatedTotalAssets() == amount
     assert token.balanceOf(vault) == 0
-    
-    # This final harvest will collect funds earned from 1 block into vault, as well as amount balance. 
+
+    # This final harvest will collect funds earned from 1 block into vault, as well as amount balance.
     # Unfortunately, there is no way to account for this balance, since you can't check claimable CRV via smart contract.
     strategy.harvest({"from": strategist})
-    
+
     # So instead of ==, we set this to >= since we know it will have some small amount gained
     assert token.balanceOf(vault) >= amount
 

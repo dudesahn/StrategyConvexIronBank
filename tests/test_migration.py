@@ -1,7 +1,7 @@
 import brownie
 from brownie import Contract
 from brownie import config
-    
+
 # TODO: Add tests that show proper migration of the strategy to a newer one
 #       Use another copy of the strategy to simulate the migration
 #       Show that nothing is lost!
@@ -20,5 +20,3 @@ def test_migration(token, vault, strategy, strategist, gov, whale, StrategyCurve
     strategy.migrate(new_strategy.address, {"from": gov})
     assert new_strategy.estimatedTotalAssets() == amount
     assert strategy.estimatedTotalAssets() == 0
-    
-    

@@ -2,9 +2,10 @@ import brownie
 from brownie import Contract
 from brownie import config
 
+
 def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter):
     # Deposit to the vault, whale approves 10% of his stack and deposits it
-    amount = token.balanceOf(whale)  
+    amount = token.balanceOf(whale)
     token.approve(vault, amount, {"from": whale})
     vault.deposit(amount, {"from": whale})
     assert token.balanceOf(vault) == amount
@@ -25,9 +26,9 @@ def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, stra
     strategy.harvest({"from": strategist})
     new_assets_dai = vault.totalAssets()
     assert new_assets_dai > old_assets_dai
-    
+
     # Display estimated APR based on the past month
-    print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai-old_assets_dai)*12)/(old_assets_dai)))
+    print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai - old_assets_dai) * 12) / (old_assets_dai)))
 
     # wait to allow share price to reach full value (takes 6 hours as of 0.3.2)
     chain.sleep(2592000)

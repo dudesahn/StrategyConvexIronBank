@@ -2,9 +2,10 @@ import brownie
 from brownie import Contract
 from brownie import config
 
+
 def test_sweep(gov, vault, strategy, token, whale):
     # Strategy want token doesn't work
-    amount = token.balanceOf(whale)       
+    amount = token.balanceOf(whale)
     token.transfer(strategy.address, amount, {"from": whale})
     assert token.address == strategy.want()
     assert token.balanceOf(strategy) > 0
@@ -14,5 +15,3 @@ def test_sweep(gov, vault, strategy, token, whale):
     # Vault share token doesn't work
     with brownie.reverts("!shares"):
         strategy.sweep(vault.address, {"from": gov})
-
-

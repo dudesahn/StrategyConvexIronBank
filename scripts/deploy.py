@@ -5,9 +5,7 @@ from eth_utils import is_checksum_address
 import click
 
 API_VERSION = config["dependencies"][0].split("@")[-1]
-Vault = project.load(
-    Path.home() / ".brownie" / "packages" / config["dependencies"][0]
-).Vault
+Vault = project.load(Path.home() / ".brownie" / "packages" / config["dependencies"][0]).Vault
 
 
 def get_address(msg: str, default: str = None) -> str:
@@ -22,9 +20,7 @@ def get_address(msg: str, default: str = None) -> str:
             click.echo(f"Found ENS '{val}' [{addr}]")
             return addr
 
-        click.echo(
-            f"I'm sorry, but '{val}' is not a checksummed address or valid ENS record"
-        )
+        click.echo(f"I'm sorry, but '{val}' is not a checksummed address or valid ENS record")
         # NOTE: Only display default once
         val = click.prompt(msg)
 

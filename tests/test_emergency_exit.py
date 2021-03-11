@@ -1,6 +1,7 @@
 import brownie
 from brownie import Contract
-from brownie import config        
+from brownie import config
+
 
 def test_emergency_exit(accounts, token, vault, strategy, strategist, whale, strategyProxy, gaugeIB):
     # Deposit to the vault, confirm that funds are in the gauge
