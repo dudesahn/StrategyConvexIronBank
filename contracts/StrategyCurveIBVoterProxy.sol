@@ -156,8 +156,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     function adjustPosition(uint256 _debtOutstanding) internal override {
-        //when migrated to we will sometimes have liquidity gauge balance.
-        //this should be withdrawn and added to proxy
+        // used in case there is balance of gauge tokens in the strategy
+        // this should be withdrawn and added to proxy
         if (checkLiqGauge == CHECK_LIQ_GAUGE_TRUE) {
             uint256 liqGaugeBal = IGauge(gauge).balanceOf(address(this));
 
