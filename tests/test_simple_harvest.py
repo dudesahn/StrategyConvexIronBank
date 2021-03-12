@@ -25,7 +25,8 @@ def test_simple_harvest(token, vault, strategy, strategist, whale, gaugeIB, stra
     chain.mine(1)
 
     # harvest after a month, store new asset amount
-    strategy.harvest({"from": strategist})
+    tx = strategy.harvest({"from": strategist})
+    tx.call_trace(True)
     new_assets_dai = vault.totalAssets()
     assert new_assets_dai > old_assets_dai
 

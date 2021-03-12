@@ -12,9 +12,6 @@ def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyP
     vault.deposit(amount, {"from": rando})
     assert token.balanceOf(vault) == amount
 
-    # set optimal to decide which token to deposit into Curve pool for each harvest (DAI first), also set crvRouter to approve voter and set router
-    strategy.setOptimal(0)
-
     # harvest, store asset amount
     strategy.harvest({"from": strategist})
     # tx.call_trace(True)
@@ -33,8 +30,8 @@ def test_operation(token, vault, strategy, strategist, whale, gaugeIB, strategyP
     chain.mine(1)
 
     # harvest after a month, store new asset amount
-    strategy.harvest({"from": strategist})
-    # tx.call_trace(True)
+    tx = strategy.harvest({"from": strategist})
+    tx.call_trace(True)
     new_assets_dai = vault.totalAssets()
     new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
     new_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
