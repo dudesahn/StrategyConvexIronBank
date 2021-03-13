@@ -33,36 +33,28 @@ def test_migration_live(token, vault, strategy, dudesahn, voter, gov, whale, Str
     
     # prepare our old strategy to migrate
     vault.updateStrategyDebtRatio(strategy, 0, {"from": strategist_ms})
-    strategy.updateCheckLiqGauge(1, {"from": dudesahn})
+    vault.revokeStrategy(strategy.address, {"from": strategist_ms})
     strategy.harvest({"from": dudesahn})
-    
+    assert strategy.estimatedTotalAssets() == 0
+    assert token.balanceOf(vault) >= holdings
+
     # migrate our old strategy
-    strategy.migrate(new_strategy.address, {"from": strategist_ms})
     vault.migrateStrategy(strategy, new_strategy, {"from": strategist_ms})
 
     # approve on new strategy with proxy
-    tx = strategyProxy.approveStrategy(new_strategy.gauge(), new_strategy, {"from": gov})
-    # tx.call_trace(True)
-    
-#     vault.updateStrategyDebtRatio(new_strategy, 0, {"from": strategist_ms})
-#     new_strategy.harvest({"from": dudesahn})
-#     vault.updateStrategyDebtRatio(strategy_ecrv_live, 1000, {"from": gov_live})
-    
-    
-    assert new_strategy.estimatedTotalAssets() == holdings
-    assert strategy.estimatedTotalAssets() == 0
-    
+    strategyProxy.approveStrategy(strategy.gauge(), new_strategy, {"from": gov})
+    vault.updateStrategyDebtRatio(new_strategy, 10000, {"from": strategist_ms})
+    new_strategy.harvest({"from": dudesahn})
+
+    assert new_strategy.estimatedTotalAssets() >= holdings    
+    assert token.balanceOf(strategy) == 0
+        
     # give rando his money back, then he sends back to whale
-    strategy.updateCheckLiqGauge(0, {"from": dudesahn})
     vault.withdraw({"from": rando})    
     
     assert token.balanceOf(rando) >= startingRando
     endingRando = token.balanceOf(rando)
     token.transfer(whale, endingRando, {"from": rando})
-    
-    
-    strategy_ecrv_live.harvest({"from": dev})
-    vault_ecrv_live.migrateStrategy(strategy_ecrv_live, strategy_ecrv2, {"from": gov_live})
 
     
     
