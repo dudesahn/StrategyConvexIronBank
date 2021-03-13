@@ -3,26 +3,32 @@ from brownie import Contract
 from brownie import config
 
 
-def test_operation(token, old_vault, old_strategy, strategist, whale, gaugeIB, strategyProxy, chain, voter, rando):
-    # Deposit to the old_vault and harvest
+def test_operation_live(token, vault, strategy, dudesahn, whale, gaugeIB, strategyProxy, chain, voter, rando, gov):
+    # Simulate ydaddy approving my strategy on the StrategyProxy
+    tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
+    tx.call_trace(True)
+    
+    # Deposit to the vault and harvest
     amount = 100 * (10 ** 18)
+    startingVault = token.balanceOf(vault)
     token.transfer(rando, amount, {"from": whale})
     startingRando = token.balanceOf(rando)
-    token.approve(old_vault.address, amount, {"from": rando})
-    old_vault.deposit(amount, {"from": rando})
-    assert token.balanceOf(old_vault) == amount
+    token.approve(vault.address, amount, {"from": rando})
+    vault.deposit(amount, {"from": rando})
+    holdings = amount + startingVault
+    assert token.balanceOf(vault) == holdings
 
     # harvest, store asset amount
-    old_strategy.harvest({"from": strategist})
+    strategy.harvest({"from": dudesahn})
     # tx.call_trace(True)
-    old_assets_dai = old_vault.totalAssets()
+    old_assets_dai = vault.totalAssets()
     old_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
     old_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
-    old_strategy_balance = token.balanceOf(old_strategy)
-    old_estimated_total_assets = old_strategy.estimatedTotalAssets()
-    old_old_vault_balance = token.balanceOf(old_vault)
-    assert strategyProxy.balanceOf(gaugeIB) == amount
-    assert old_assets_dai == amount
+    old_strategy_balance = token.balanceOf(strategy)
+    old_estimated_total_assets = strategy.estimatedTotalAssets()
+    old_vault_balance = token.balanceOf(vault)
+    assert strategyProxy.balanceOf(gaugeIB) == holdings
+    assert old_assets_dai == holdings
     assert old_assets_dai == strategyProxy.balanceOf(gaugeIB)
 
     # simulate a month of earnings
@@ -30,27 +36,27 @@ def test_operation(token, old_vault, old_strategy, strategist, whale, gaugeIB, s
     chain.mine(1)
 
     # harvest after a month, store new asset amount
-    tx = old_strategy.harvest({"from": strategist})
+    tx = strategy.harvest({"from": dudesahn})
     tx.call_trace(True)
-    new_assets_dai = old_vault.totalAssets()
+    new_assets_dai = vault.totalAssets()
     new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
     new_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
-    new_strategy_balance = token.balanceOf(old_strategy)
-    new_estimated_total_assets = old_strategy.estimatedTotalAssets()
-    new_old_vault_balance = token.balanceOf(old_vault)
+    new_strategy_balance = token.balanceOf(strategy)
+    new_estimated_total_assets = strategy.estimatedTotalAssets()
+    new_vault_balance = token.balanceOf(vault)
     assert old_assets_dai == strategyProxy.balanceOf(gaugeIB)
 
-    # Check for any assets only in the old_vault, not in the strategy
-    print("\nOld old_vault Holdings: ", old_old_vault_balance)
-    print("\nNew old_vault Holdings: ", new_old_vault_balance)
+    # Check for any assets only in the vault, not in the strategy
+    print("\nOld Vault Holdings: ", old_vault_balance)
+    print("\nNew Vault Holdings: ", new_vault_balance)
 
     # Check total assets in the strategy
     print("\nOld Strategy totalAssets: ", old_estimated_total_assets)
     print("\nNew Strategy totalAssets: ", new_estimated_total_assets)
 
-    # Check total assets in the old_vault + strategy
-    print("\nOld old_vault totalAssets: ", old_assets_dai)
-    print("\nNew old_vault totalAssets: ", new_assets_dai)
+    # Check total assets in the vault + strategy
+    print("\nOld Vault totalAssets: ", old_assets_dai)
+    print("\nNew Vault totalAssets: ", new_assets_dai)
 
     # Want token should never be in the strategy
     print("\nOld Strategy balanceOf: ", old_strategy_balance)
@@ -70,39 +76,39 @@ def test_operation(token, old_vault, old_strategy, strategist, whale, gaugeIB, s
     # assert strategyProxy.balanceOf(gauge) == new_assets_dai
     assert new_assets_dai > old_assets_dai
 
-    #     genericStateOfStrat(strategy, currency, old_vault)
-    #     genericStateOfold_vault(old_vault, currency)
+    #     genericStateOfStrat(strategy, currency, vault)
+    #     genericStateOfVault(vault, currency)
 
     # Display estimated APR based on the past month
     print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai - old_assets_dai) * 12) / (old_assets_dai)))
 
     # set optimal to USDC. new_assets_dai is now our new baseline
-    old_strategy.setOptimal(1)
+    strategy.setOptimal(1, {"from": dudesahn})
 
     # simulate a month of earnings
     chain.sleep(2592000)
     chain.mine(1)
 
     # harvest after a month, store new asset amount after switch to USDC
-    old_strategy.harvest({"from": strategist})
-    new_assets_usdc = old_vault.totalAssets()
-    assert strategyProxy.balanceOf(gaugeIB) > amount
+    strategy.harvest({"from": dudesahn})
+    new_assets_usdc = vault.totalAssets()
+    assert strategyProxy.balanceOf(gaugeIB) > holdings
     assert new_assets_usdc > new_assets_dai
 
     # Display estimated APR based on the past month
     print("\nEstimated USDC APR: ", "{:.2%}".format(((new_assets_usdc - new_assets_dai) * 12) / (new_assets_dai)))
 
     # set optimal to USDT, new_assets_usdc is now our new baseline
-    old_strategy.setOptimal(2)
+    strategy.setOptimal(2, {"from": dudesahn})
 
     # simulate a month of earnings
     chain.sleep(2592000)
     chain.mine(1)
 
     # harvest after a month, store new asset amount
-    old_strategy.harvest({"from": strategist})
-    new_assets_usdt = old_vault.totalAssets()
-    assert strategyProxy.balanceOf(gaugeIB) > amount
+    strategy.harvest({"from": dudesahn})
+    new_assets_usdt = vault.totalAssets()
+    assert strategyProxy.balanceOf(gaugeIB) > holdings
     assert new_assets_usdt > new_assets_usdc
 
     # Display estimated APR based on the past month
@@ -113,7 +119,7 @@ def test_operation(token, old_vault, old_strategy, strategist, whale, gaugeIB, s
     chain.mine(1)
 
     # give rando his money back, then he sends back to whale
-    old_vault.withdraw({"from": rando})    
+    vault.withdraw({"from": rando})    
     assert token.balanceOf(rando) >= startingRando
     endingRando = token.balanceOf(rando)
     token.transfer(whale, endingRando, {"from": rando})  

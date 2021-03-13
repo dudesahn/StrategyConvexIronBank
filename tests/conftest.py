@@ -44,6 +44,10 @@ def gov(accounts):
 
 
 @pytest.fixture
+def dudesahn(accounts):
+    yield accounts.at("0x677Ae1C4FDa1A986a23a055Bbd0A94f8e5b284De", force=True)
+
+@pytest.fixture
 def rewards(accounts):
     yield accounts[0]
 
@@ -71,6 +75,11 @@ def keeper(accounts):
 @pytest.fixture
 def rando(accounts):
     yield accounts[5]
+
+@pytest.fixture
+def strategist_ms(accounts):
+    # like governance, but better
+    yield accounts.at("0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7", force=True)
 
 
 @pytest.fixture
@@ -116,21 +125,32 @@ def strategyProxy(interface):
 
 
 @pytest.fixture
-def vault(pm, gov, rewards, guardian, management, token):
+def old_vault(pm, gov, rewards, guardian, management, token):
     Vault = pm(config["dependencies"][0]).Vault
-    vault = guardian.deploy(Vault)
+    old_vault = guardian.deploy(Vault)
     vault.initialize(token, gov, rewards, "", "", guardian)
-    vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
-    vault.setManagement(management, {"from": gov})
+    old_vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
+    old_vault.setManagement(management, {"from": gov})
+    yield old_vault
+
+@pytest.fixture
+def vault(pm):
+    Vault = pm(config["dependencies"][0]).Vault
+    vault = Vault.at('0x27b7b1ad7288079A66d12350c828D3C00A6F07d7')
     yield vault
 
 
 @pytest.fixture
-def strategy(strategist, keeper, vault, StrategyCurveIBVoterProxy, gov, strategyProxy):
-    strategy = strategist.deploy(StrategyCurveIBVoterProxy, vault)
-    strategy.setKeeper(keeper)
-    strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
-    vault.addStrategy(strategy, 10000, 0, 2 ** 256 - 1, 1000, {"from": gov})
+def old_strategy(strategist, keeper, old_vault, StrategyCurveIBVoterProxy, gov, strategyProxy):
+    old_strategy = strategist.deploy(StrategyCurveIBVoterProxy, old_vault)
+    old_strategy.setKeeper(keeper)
+    strategyProxy.approveStrategy(old_strategy.gauge(), old_strategy, {"from": gov})
+    old_vault.addStrategy(old_strategy, 10000, 0, 2 ** 256 - 1, 1000, {"from": gov})
+    yield old_strategy
+
+@pytest.fixture
+def strategy(StrategyCurveIBVoterProxy):
+    strategy = StrategyCurveIBVoterProxy.at('0x5c0309fa022Bc1B73fE45A2D73EddeD58a820ff8')
     yield strategy
 
 
