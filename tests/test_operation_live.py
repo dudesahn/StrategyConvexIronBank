@@ -4,9 +4,9 @@ from brownie import config
 
 
 def test_operation_live(token, vault, strategy, dudesahn, whale, gaugeIB, strategyProxy, chain, voter, rando, gov):
-    # Simulate ydaddy approving my strategy on the StrategyProxy
-    tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
-    tx.call_trace(True)
+    # Simulate ydaddy approving my strategy on the StrategyProxy (this has now been approved
+    #tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
+    # tx.call_trace(True)
     
     # Deposit to the vault and harvest
     amount = 100 * (10 ** 18)
