@@ -8,8 +8,8 @@ from brownie import config
 
 
 def test_migration_live(token, vault, strategy, dudesahn, voter, gov, whale, StrategyCurveIBVoterProxy, strategyProxy, strategist_ms, rando, chain, gaugeIB):
-    # Simulate ydaddy approving my strategy on the StrategyProxy
-    tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
+    # Simulate ydaddy approving my strategy on the StrategyProxy (now commented out)
+    # tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
     # tx.call_trace(True)
 
     # Deposit to the vault and harvest
