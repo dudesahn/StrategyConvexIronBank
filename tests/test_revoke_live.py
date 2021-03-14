@@ -5,8 +5,8 @@ from brownie import config
 
 def test_revoke_live(token, vault, strategy, gov, strategist_ms, dudesahn, whale, gaugeIB, strategyProxy, voter, chain, rando):
     # Simulate ydaddy approving my strategy on the StrategyProxy
-    tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
-    tx.call_trace(True)
+    # tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
+    # tx.call_trace(True)
 
     # Deposit to the vault and harvest
     startingVault = token.balanceOf(vault)
