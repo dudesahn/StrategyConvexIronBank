@@ -1,9 +1,12 @@
 import pytest
-from brownie import config
-from brownie import Contract
+from brownie import config, Wei, Contract
+
+# Snapshots the chain before each test and reverts after test completion.
+@pytest.fixture(scope="function", autouse=True)
+def shared_setup(fn_isolation):
+    pass
 
 # Define relevant tokens and contracts in this section
-
 
 @pytest.fixture
 def token():
