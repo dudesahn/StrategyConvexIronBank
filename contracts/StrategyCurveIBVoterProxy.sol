@@ -86,6 +86,20 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         return proxy.balanceOf(gauge).add(want.balanceOf(address(this)));
     }
 
+    function convertCrv() external onlyKeepers {
+        // Check the gauge for CRV, then harvest gauge CRV and sell for preferred asset, but don't deposit
+        uint256 gaugeTokens = proxy.balanceOf(gauge);
+        if (gaugeTokens > 0) {
+            proxy.harvest(gauge);
+            uint256 crvBalance = crv.balanceOf(address(this));
+            uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
+            IERC20(address(crv)).safeTransfer(voter, _keepCRV);
+            uint256 crvRemainder = crvBalance.sub(_keepCRV);
+
+            _sell(crvRemainder);
+        }
+    }
+
     function prepareReturn(uint256 _debtOutstanding)
         internal
         override
@@ -103,11 +117,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         uint256 gaugeTokens = proxy.balanceOf(gauge);
         if (gaugeTokens > 0) {
             proxy.harvest(gauge);
-
             uint256 crvBalance = crv.balanceOf(address(this));
             uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
             IERC20(address(crv)).safeTransfer(voter, _keepCRV);
-            proxy.lock();
             uint256 crvRemainder = crvBalance.sub(_keepCRV);
 
             _sell(crvRemainder);
@@ -216,12 +228,16 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         }
     }
 
-    function protectedTokens()
-        internal
-        view
-        override
-        returns (address[] memory)
-    {}
+    function protectedTokens() internal view override returns (address[] memory) {
+        address[] memory protected = new address[](5);
+        protected[0] = gauge;
+        protected[1] = address(crv);
+        protected[2] = address(dai);
+        protected[3] = address(usdt);
+        protected[4] = address(usdc);
+
+        return protected;
+    }
 
     // setter functions
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
