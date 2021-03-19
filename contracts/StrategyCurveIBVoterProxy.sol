@@ -86,15 +86,14 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
 //////// JUST USE THESE FUNCTIONS IN TESTING, REMOVE BEFORE DEPLOYING /////////////////////////////////
     // look at the average price when swapping min CRV
-    function crvPrice() internal view returns (uint256) {
+    function crvPrice() public view returns (uint256) {
             address[] memory harvestPath = new address[](3);
             harvestPath[0] = address(crv);
         	harvestPath[1] = address(weth);
         	harvestPath[2] = address(dai);
         
-        	uint256[] memory _crvDollarsOut = IUniswapV2Router02(crvRouter).getAmountsOut(crvMinimum, harvestPath);
-        	uint256 crvDollarsOut = _crvDollarsOut[_crvDollarsOut.length - 1] / (10**18);
-        	return crvDollarsOut;
+        	uint256[] memory _crvDollarsOut = IUniswapV2Router02(crvRouter).getAmountsOut(_amountIn, harvestPath);
+        	return _crvDollarsOut[_crvDollarsOut.length - 1];
     }    
 	// conduct first harvest manually since our gauge currently has tokens in it
     function firstHarvest() external onlyAuthorized {
@@ -205,7 +204,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         	// check to make sure this isn't our first harvest call
             uint256 gaugeTokens = proxy.balanceOf(gauge);
         	if (gaugeTokens > 0) {
-        		if (tendCounter < tendsPerHarvest) { 
+        		if (tendCounter < tendsPerHarvest) { // only allow tend calls if the counter is low enough
         		// This is our tend call. Check the gauge for CRV, then harvest gauge CRV and sell for preferred asset, but don't deposit.
             		proxy.harvest(gauge);
             		uint256 crvBalance = crv.balanceOf(address(this));
@@ -219,7 +218,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             		tendCounter = previousTendCounter.add(1);
             	}
         	
-        		else { // this else will only occur during a harvest call
+        		else { // this else will only occur during a harvest call, or if we should actually be harvesting but someone called tend
         			// sent all of our Iron Bank pool tokens to the proxy and deposit to the gauge
         			uint256 _toInvest = want.balanceOf(address(this));
         			want.safeTransfer(address(proxy), _toInvest);
@@ -238,23 +237,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         	}
         }
     }
-//     Check the gauge for CRV, then harvest gauge CRV and sell for preferred asset, but don't deposit
-//     function tend() external override onlyKeepers {
-//         uint256 gaugeTokens = proxy.balanceOf(gauge);
-//         if (gaugeTokens > 0) {
-//             proxy.harvest(gauge);
-//             uint256 crvBalance = crv.balanceOf(address(this));
-//             uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
-//             IERC20(address(crv)).safeTransfer(voter, _keepCRV);
-//             uint256 crvRemainder = crvBalance.sub(_keepCRV);
-// 
-//             _sell(crvRemainder);
-//             increase our tend counter by 1 so we can know when we should harvest again
-//             uint256 previousTendCounter = tendCounter;
-//             tendCounter = previousTendCounter.add(1);
-//         }
-//     }
-
 
     function liquidatePosition(uint256 _amountNeeded)
         internal

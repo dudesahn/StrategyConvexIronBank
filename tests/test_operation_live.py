@@ -3,33 +3,26 @@ from brownie import Contract
 from brownie import config
 
 
-def test_operation_live(token, vault, strategy, dudesahn, whale, gaugeIB, strategyProxy, chain, voter, rando, gov):
-    # Simulate ydaddy approving my strategy on the StrategyProxy (this has now been approved
-    #tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
-    # tx.call_trace(True)
+def test_operation_live(token, vault, strategy, dudesahn, whale, gaugeIB, strategyProxy, chain, voter, rando, gov, strategist_ms):
+    # Update deposit limit to the vault since it's currently maxed out
+    vault.setDepositLimit(100000000000000000000000000, {"from": strategist_ms})
     
     # Deposit to the vault and harvest
     amount = 100 * (10 ** 18)
-    startingVault = token.balanceOf(vault)
+    startingVault = vault.totalAssets()
     token.transfer(rando, amount, {"from": whale})
     startingRando = token.balanceOf(rando)
     token.approve(vault.address, amount, {"from": rando})
     vault.deposit(amount, {"from": rando})
     holdings = amount + startingVault
-    assert token.balanceOf(vault) == holdings
+    assert vault.totalAssets() == holdings
 
     # harvest, store asset amount
     strategy.harvest({"from": dudesahn})
-    # tx.call_trace(True)
     old_assets_dai = vault.totalAssets()
-    old_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
-    old_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
-    old_strategy_balance = token.balanceOf(strategy)
-    old_estimated_total_assets = strategy.estimatedTotalAssets()
-    old_vault_balance = token.balanceOf(vault)
+    # tx.call_trace(True)
+
     assert strategyProxy.balanceOf(gaugeIB) == holdings
-    assert old_assets_dai == holdings
-    assert old_assets_dai == strategyProxy.balanceOf(gaugeIB)
 
     # simulate a month of earnings
     chain.sleep(2592000)
@@ -37,47 +30,15 @@ def test_operation_live(token, vault, strategy, dudesahn, whale, gaugeIB, strate
 
     # harvest after a month, store new asset amount
     tx = strategy.harvest({"from": dudesahn})
-    tx.call_trace(True)
+    # tx.call_trace(True)
     new_assets_dai = vault.totalAssets()
-    new_proxy_balanceOf_gauge = strategyProxy.balanceOf(gaugeIB)
-    new_gauge_balanceOf_voter = gaugeIB.balanceOf(voter)
-    new_strategy_balance = token.balanceOf(strategy)
-    new_estimated_total_assets = strategy.estimatedTotalAssets()
-    new_vault_balance = token.balanceOf(vault)
-    assert old_assets_dai == strategyProxy.balanceOf(gaugeIB)
-
-    # Check for any assets only in the vault, not in the strategy
-    print("\nOld Vault Holdings: ", old_vault_balance)
-    print("\nNew Vault Holdings: ", new_vault_balance)
-
-    # Check total assets in the strategy
-    print("\nOld Strategy totalAssets: ", old_estimated_total_assets)
-    print("\nNew Strategy totalAssets: ", new_estimated_total_assets)
 
     # Check total assets in the vault + strategy
     print("\nOld Vault totalAssets: ", old_assets_dai)
     print("\nNew Vault totalAssets: ", new_assets_dai)
 
-    # Want token should never be in the strategy
-    print("\nOld Strategy balanceOf: ", old_strategy_balance)
-    print("\nNew Strategy balanceOf: ", new_strategy_balance)
-
-    # These two calls should return the same value, and should update after every harvest call
-    print("\nOld Proxy balanceOf gauge: ", old_proxy_balanceOf_gauge)
-    print("\nNew Proxy balanceOf gauge: ", new_proxy_balanceOf_gauge)
-    print("\nOld gauge balanceOf voter: ", old_gauge_balanceOf_voter)
-    print("\nNew gauge balanceOf voter: ", new_gauge_balanceOf_voter)
-
     # There are two ways to check gauge token balances. Either call from the gauge token contract gauge.balanceOf(voter), or call strategyProxy.balanceOf(gauge)
-
-    # assert strategyProxy.balanceOf(gauge) > amount
-    # assert strategyProxy.balanceOf(gauge) == new_assets_dai
-    # assert gauge.balanceOf(voter) == strategyProxy.balanceOf(gauge)
-    # assert strategyProxy.balanceOf(gauge) == new_assets_dai
     assert new_assets_dai > old_assets_dai
-
-    #     genericStateOfStrat(strategy, currency, vault)
-    #     genericStateOfVault(vault, currency)
 
     # Display estimated APR based on the past month
     print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai - old_assets_dai) * 12) / (old_assets_dai)))
