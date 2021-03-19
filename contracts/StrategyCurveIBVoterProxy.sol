@@ -42,6 +42,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // this controls the number of tends before we harvest
     uint256 public tendCounter = 0;
     uint256 public tendsPerHarvest = 3;
+    uint256 private harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
 
     ICrvV3 public constant crv = ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
     IERC20 public constant weth = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
@@ -86,24 +87,16 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
 //////// JUST USE THESE FUNCTIONS IN TESTING, REMOVE BEFORE DEPLOYING /////////////////////////////////
     // look at the average price when swapping min CRV
-    function crvPrice() public view returns (uint256) {
+    function crvPrice() external view returns (uint256) {
             address[] memory harvestPath = new address[](3);
             harvestPath[0] = address(crv);
         	harvestPath[1] = address(weth);
         	harvestPath[2] = address(dai);
         
-        	uint256[] memory _crvDollarsOut = IUniswapV2Router02(crvRouter).getAmountsOut(_amountIn, harvestPath);
-        	return _crvDollarsOut[_crvDollarsOut.length - 1];
+        	uint256[] memory _crvDollarsOut = IUniswapV2Router02(crvRouter).getAmountsOut(crvMinimum, harvestPath);
+        	uint256 crvDollarsOut = _crvDollarsOut[_crvDollarsOut.length - 1] / (10**18);
+        	return crvDollarsOut;
     }    
-	// conduct first harvest manually since our gauge currently has tokens in it
-    function firstHarvest() external onlyAuthorized {
-        		// send all of our Iron Bank pool tokens to the proxy and deposit to the gauge
-        		uint256 _toInvest = want.balanceOf(address(this));
-        		want.safeTransfer(address(proxy), _toInvest);
-    			proxy.deposit(gauge, address(want));
-    			// since we've completed our harvest call, reset our tend counter
-    			tendCounter = 0;
-    }
 
 //////////////////////////////////////////////////
 
@@ -152,6 +145,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
                 curve.add_liquidity([0, 0, usdtBalance], 0, true);
             }
         }
+        // this is a harvest, so set our switch equal to 1 so this
+        // performs as a harvest the whole way through
+        harvestNow = 1;
         // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
         uint256 assets = estimatedTotalAssets();
         uint256 debt = vault.strategies(address(this)).totalDebt;
@@ -197,47 +193,34 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         	uint256 _toInvest = want.balanceOf(address(this));
         	want.safeTransfer(address(proxy), _toInvest);
         	proxy.deposit(gauge, address(want));
-        	// since we've deposited to gauge, reset our tend counter
+        	// since we've deposited to gauge, reset our counters
         	tendCounter = 0;
+        	harvestNow = 0;       	
         }
-        else { 
-        	// check to make sure this isn't our first harvest call
-            uint256 gaugeTokens = proxy.balanceOf(gauge);
-        	if (gaugeTokens > 0) {
-        		if (tendCounter < tendsPerHarvest) { // only allow tend calls if the counter is low enough
-        		// This is our tend call. Check the gauge for CRV, then harvest gauge CRV and sell for preferred asset, but don't deposit.
-            		proxy.harvest(gauge);
-            		uint256 crvBalance = crv.balanceOf(address(this));
-            		uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
-            		IERC20(address(crv)).safeTransfer(voter, _keepCRV);
-            		uint256 crvRemainder = crvBalance.sub(_keepCRV);
-            		
-            		_sell(crvRemainder);
-            		// increase our tend counter by 1 so we can know when we should harvest again
-            		uint256 previousTendCounter = tendCounter;
-            		tendCounter = previousTendCounter.add(1);
-            	}
-        	
-        		else { // this else will only occur during a harvest call, or if we should actually be harvesting but someone called tend
-        			// sent all of our Iron Bank pool tokens to the proxy and deposit to the gauge
-        			uint256 _toInvest = want.balanceOf(address(this));
-        			want.safeTransfer(address(proxy), _toInvest);
-        			proxy.deposit(gauge, address(want));
-        			// since we've completed our harvest call, reset our tend counter
-        			tendCounter = 0;
-        		}
-        	}
-        	else { // this is our first harvest call
-        	    // sent all of our Iron Bank pool tokens to the proxy and deposit to the gauge
+        else {
+        	if (harvestNow == 1) { // if this is part of a harvest call
         		uint256 _toInvest = want.balanceOf(address(this));
         		want.safeTransfer(address(proxy), _toInvest);
-    			proxy.deposit(gauge, address(want));
-    			// since we've completed our harvest call, reset our tend counter        			
+        		proxy.deposit(gauge, address(want));
+        		// since we've completed our harvest call, reset our tend counter and our harvest now
     			tendCounter = 0;
-        	}
+        		harvestNow = 0;
+        		}
+        	else { // This is our tend call. Check the gauge for CRV, then harvest gauge CRV and sell for preferred asset, but don't deposit.
+            	proxy.harvest(gauge);
+            	uint256 crvBalance = crv.balanceOf(address(this));
+        		uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
+        		IERC20(address(crv)).safeTransfer(voter, _keepCRV);
+        		uint256 crvRemainder = crvBalance.sub(_keepCRV);     
+        		
+        		_sell(crvRemainder);
+            	// increase our tend counter by 1 so we can know when we should harvest again
+        		uint256 previousTendCounter = tendCounter;
+        		tendCounter = previousTendCounter.add(1);
+            	}
         }
     }
-
+    
     function liquidatePosition(uint256 _amountNeeded)
         internal
         override
@@ -266,9 +249,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     // Sells our harvested CRV into the selected output (DAI, USDC, or USDT).
-    function _sell(uint256 _sellAmount) internal {
+    function _sell(uint256 _amount) internal {
         IUniswapV2Router02(crvRouter).swapExactTokensForTokens(
-            _sellAmount,
+            _amount,
             uint256(0),
             crvPath,
             address(this),
