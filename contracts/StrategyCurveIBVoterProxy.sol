@@ -399,24 +399,29 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     // use these functions to set parameters for our triggers
+    
+    // set minimum profit factor needed for tends
     function setTendProfitFactor(uint256 _tendProfitFactor)
         external
         onlyAuthorized
     {
         tendProfitFactor = _tendProfitFactor;
     }
-
+    
+    // set minimum profit factor needed for harvests
     function setHarvestProfitFactor(uint256 _harvestProfitFactor)
         external
         onlyAuthorized
     {
         harvestProfitFactor = _harvestProfitFactor;
     }
-
+    
+    // set minimum CRV needed in gauge to harvest or tend
     function setCrvMin(uint256 _crvMinimum) external onlyAuthorized {
         crvMinimum = _crvMinimum;
     }
-
+    
+    // set number of tends before we default to a harvest
     function setTendsPerHarvest(uint256 _tendsPerHarvest) external onlyAuthorized {
         tendsPerHarvest = _tendsPerHarvest;
     }
