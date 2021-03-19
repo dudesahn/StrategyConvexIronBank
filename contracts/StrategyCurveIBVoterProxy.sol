@@ -417,6 +417,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         crvMinimum = _crvMinimum;
     }
 
+    function setTendsPerHarvest(uint256 _tendsPerHarvest) external onlyAuthorized {
+        tendsPerHarvest = _tendsPerHarvest;
+    }
+    
     // setter functions
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
 
