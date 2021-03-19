@@ -103,9 +103,9 @@ def new_address(accounts):
 @pytest.fixture
 def whale(accounts, token, reserve):
     # Totally in it for the tech
-    # Has 10% of tokens (was in the ICO)
+    # Has 50% of tokens (was in the ICO)
     a = accounts[6]
-    bal = token.totalSupply() // 10
+    bal = token.totalSupply() // 2
     token.transfer(a, bal, {"from": reserve})
     yield a
 

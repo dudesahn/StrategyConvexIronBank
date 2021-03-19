@@ -12,10 +12,7 @@ def test_migration_live(token, vault, strategy, dudesahn, voter, gov, whale, Str
     # tx = strategyProxy.approveStrategy(strategy.gauge(), strategy, {"from": gov})
     # tx.call_trace(True)
     
-#     print CRV price for 12500 CRV
-#     tx = strategy.crvPrice(12500000000000000000000, {"from": dudesahn})
-#     tx.call_trace(True)
-#     print("\nSell 12500 CRV for this much DAI", tx)
+
     
     # Update deposit limit to the vault since it's currently maxed out
     vault.setDepositLimit(100000000000000000000000000, {"from": strategist_ms})
@@ -62,52 +59,54 @@ def test_migration_live(token, vault, strategy, dudesahn, voter, gov, whale, Str
     vault.updateStrategyDebtRatio(new_strategy, 10000, {"from": strategist_ms})
     new_strategy.harvest({"from": dudesahn})
     
+    #     print CRV price for 12500 CRV
+    tx = new_strategy.crvPrice({"from": dudesahn})
+    print("\nSell 12500 CRV for this much DAI", tx)
+    
+    
     # assert new_strategy.estimatedTotalAssets() >= holdings
     # assert that our old strategy is empty still
     assert token.balanceOf(strategy) == 0
     
-    # simulate a month of earnings
+    # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
     
     # Test out our migrated strategy
     new_strategy.harvest({"from": dudesahn})
-    assert tendCounter == 0
+    assert new_strategy.tendCounter() == 0
     
-    # simulate a month of earnings
+    # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
     
     new_strategy.tend({"from": dudesahn})
-    assert tendCounter == 1
+    assert new_strategy.tendCounter() == 1
     
-    # simulate a month of earnings
+    # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
     
     new_strategy.tend({"from": dudesahn})
-    assert tendCounter == 2
+    assert new_strategy.tendCounter() == 2
     
-    # simulate a month of earnings
+    # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
     
     new_strategy.tend({"from": dudesahn})
-    assert tendCounter == 3
+    assert new_strategy.tendCounter() == 3
     
-    # simulate a month of earnings
+    # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
     
-    new_strategy.tend({"from": dudesahn})
-    assert tendCounter == 3
+    new_strategy.harvest({"from": dudesahn})
+    assert new_strategy.tendCounter() == 0
         
-    # give rando his money back, then he sends back to whale
-    vault.withdraw({"from": rando})    
-    
-    assert token.balanceOf(rando) >= startingRando
-    endingRando = token.balanceOf(rando)
-    token.transfer(whale, endingRando, {"from": rando})
+    # withdraw my money
+    vault.withdraw({"from": dudesahn})    
+    assert token.balanceOf(dudesahn) > 0
 
     
     
