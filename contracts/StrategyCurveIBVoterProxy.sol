@@ -45,7 +45,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // this controls the number of tends before we harvest
     uint256 public tendCounter = 0;
     uint256 public tendsPerHarvest = 3;
-    uint256 private harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
+    uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
 
     ICrvV3 public constant crv =
         ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
@@ -399,24 +399,33 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     // use these functions to set parameters for our triggers
+    
+    // set minimum profit factor needed for tends
     function setTendProfitFactor(uint256 _tendProfitFactor)
         external
         onlyAuthorized
     {
         tendProfitFactor = _tendProfitFactor;
     }
-
+    
+    // set minimum profit factor needed for harvests
     function setHarvestProfitFactor(uint256 _harvestProfitFactor)
         external
         onlyAuthorized
     {
         harvestProfitFactor = _harvestProfitFactor;
     }
-
+    
+    // set minimum CRV needed in gauge to harvest or tend
     function setCrvMin(uint256 _crvMinimum) external onlyAuthorized {
         crvMinimum = _crvMinimum;
     }
-
+    
+    // set number of tends before we default to a harvest
+    function setTendsPerHarvest(uint256 _tendsPerHarvest) external onlyAuthorized {
+        tendsPerHarvest = _tendsPerHarvest;
+    }
+    
     // setter functions
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
 
