@@ -50,6 +50,10 @@ def test_revoke_strategy_from_vault(gov, token, vault, dudesahn, strategist, wha
     chain.mine(1)
     strategy.harvest({"from": dudesahn})
     
+    # simulate a day of earnings
+    chain.sleep(86400)
+    chain.mine(1)
+    
     assert strategy.estimatedTotalAssets() == vaultAssets_2
     vault.revokeStrategy(strategy.address, {"from": strategist_ms})
     strategy.harvest({"from": dudesahn})
