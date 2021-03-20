@@ -1,18 +1,25 @@
-import brownie
-from brownie import Contract
-from brownie import config
+# Migration for yDaddy
 
-# TODO: Add tests that show proper migration of the strategy to a newer one
-#       Use another copy of the strategy to simulate the migration
-#       Show that nothing is lost!
+there's another last step to set the proxy of the old strategy with zero address. to make it safer.
 
-def test_migration(gov, token, vault, dudesahn, strategist, whale, strategyProxy, gaugeIB, rando, chain, amount, StrategyCurveIBVoterProxy, live_strategy, vault_balance, strategist_ms):
+	# I do this step first
+	new_strategy = dudesahn.deploy(StrategyCurveIBVoterProxy, vault)
+	# Set up sharer on new strategy as well
+
+	# Now, yDaddy does the rest
     # deploy our new strategy
     new_strategy = dudesahn.deploy(StrategyCurveIBVoterProxy, vault)  
+      
+    # here's our addresses
+    multisig = accounts.at("0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", force=True)  
+    
+    # deploy my strategy, set up sharer, set up rewards
+    
       
     # prepare our live strategy to migrate
     vault.updateStrategyDebtRatio(live_strategy, 0, {"from": strategist_ms})
     live_strategy.harvest({"from": dudesahn})
+    live_strategy.setProxy(0x0000000000000000000000000000000000000000)
 
     # assert that our old strategy is empty
     live_strat_balance = live_strategy.estimatedTotalAssets()
@@ -39,29 +46,3 @@ def test_migration(gov, token, vault, dudesahn, strategist, whale, strategyProxy
     new_gauge_balance = strategyProxy.balanceOf(gaugeIB)
     assert new_gauge_balance == total_old
     print("\nNew Proxy gauge balance: ", new_gauge_balance)
-    
-    startingVault = vault.totalAssets()
-    print("\nVault starting assets with new strategy: ", startingVault)
-    
-    # simulate a day of earnings
-    chain.sleep(86400)
-    chain.mine(1)
-    
-    # test out tend
-    new_strategy.tend({"from": dudesahn})
-    assert new_strategy.tendCounter() == 1
-    
-    # simulate a day of earnings
-    chain.sleep(86400)
-    chain.mine(1)
-    
-    # Test out our migrated strategy, confirm we're making a profit
-    new_strategy.harvest({"from": dudesahn})
-    assert new_strategy.tendCounter() == 0
-    vaultAssets_2 = vault.totalAssets()
-    assert vaultAssets_2 > startingVault
-    print("\nAssets after 1 day harvest: ", vaultAssets_2)
-        
-    # withdraw my money
-    vault.withdraw({"from": dudesahn})    
-    assert token.balanceOf(dudesahn) > 0
