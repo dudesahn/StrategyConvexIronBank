@@ -57,10 +57,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
 
-    uint256 public checkLiqGauge = 0; // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
-    uint256 public constant CHECK_LIQ_GAUGE_TRUE = 1;
-    uint256 public constant CHECK_LIQ_GAUGE_FALSE = 0;
-
     uint256 public constant USE_SUSHI = 1;
     address public constant sushiswapRouter =
         address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
@@ -171,43 +167,26 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     function adjustPosition(uint256 _debtOutstanding) internal override {
-        // used in case there is balance of gauge tokens in the strategy
-        // this should be withdrawn and added to proxy
-        if (checkLiqGauge == CHECK_LIQ_GAUGE_TRUE) {
-            uint256 liqGaugeBal = IGauge(gauge).balanceOf(address(this));
-
-            if (liqGaugeBal > 0) {
-                IGauge(gauge).withdraw(liqGaugeBal);
-            }
-            // send all of our Iron Bank pool tokens to the proxy and deposit to the gauge
+        if (harvestNow == 1) {
+            // if this is part of a harvest call, send all of our Iron Bank pool tokens to the proxy and deposit to the gauge
             uint256 _toInvest = want.balanceOf(address(this));
             want.safeTransfer(address(proxy), _toInvest);
             proxy.deposit(gauge, address(want));
-            // since we've deposited to gauge, reset our counters
+            // since we've completed our harvest call, reset our tend counter and our harvest now
             tendCounter = 0;
             harvestNow = 0;
         } else {
-            if (harvestNow == 1) {
-                // if this is part of a harvest call
-                uint256 _toInvest = want.balanceOf(address(this));
-                want.safeTransfer(address(proxy), _toInvest);
-                proxy.deposit(gauge, address(want));
-                // since we've completed our harvest call, reset our tend counter and our harvest now
-                tendCounter = 0;
-                harvestNow = 0;
-            } else {
-                // This is our tend call. Check the gauge for CRV, then harvest gauge CRV and sell for preferred asset, but don't deposit.
-                proxy.harvest(gauge);
-                uint256 crvBalance = crv.balanceOf(address(this));
-                uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
-                IERC20(address(crv)).safeTransfer(voter, _keepCRV);
-                uint256 crvRemainder = crvBalance.sub(_keepCRV);
+            // This is our tend call. Check the gauge for CRV, then harvest gauge CRV and sell for preferred asset, but don't deposit.
+            proxy.harvest(gauge);
+            uint256 crvBalance = crv.balanceOf(address(this));
+            uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
+            IERC20(address(crv)).safeTransfer(voter, _keepCRV);
+            uint256 crvRemainder = crvBalance.sub(_keepCRV);
 
-                _sell(crvRemainder);
-                // increase our tend counter by 1 so we can know when we should harvest again
-                uint256 previousTendCounter = tendCounter;
-                tendCounter = previousTendCounter.add(1);
-            }
+            _sell(crvRemainder);
+            // increase our tend counter by 1 so we can know when we should harvest again
+            uint256 previousTendCounter = tendCounter;
+            tendCounter = previousTendCounter.add(1);
         }
     }
 
@@ -336,17 +315,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     // Use to update Yearn's StrategyProxy contract as needed in case of upgrades.
     function setProxy(address _proxy) external onlyGovernance {
         proxy = ICurveStrategyProxy(_proxy);
-    }
-
-    // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
-    // checkLiqGauge TRUE = 1;
-    // checkLiqGauge FALSE = 0;
-    function updateCheckLiqGauge(uint256 _checkLiqGauge)
-        external
-        onlyAuthorized
-    {
-        require(_checkLiqGauge <= CHECK_LIQ_GAUGE_TRUE, "incorrect value");
-        checkLiqGauge = _checkLiqGauge;
     }
 
     // Set the amount of CRV to be locked in Yearn's veCRV voter from each harvest. Default is 10%.
