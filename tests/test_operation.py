@@ -47,6 +47,13 @@ def test_operation(gov, token, vault, dudesahn, whale, strategyProxy, gaugeIB, r
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
+        
+    # tend our strategy 
+    strategy.tend({"from": dudesahn})
+    
+    # simulate a day of earnings
+    chain.sleep(86400)
+    chain.mine(1)
 
     # harvest, store asset amount
     strategy.harvest({"from": dudesahn})

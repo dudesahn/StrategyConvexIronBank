@@ -3,7 +3,7 @@ from brownie import Contract
 from brownie import config
 
 
-def test_simple_harvest(gov, token, vault, dudesahn, strategist, whale, voter, strategyProxy, gaugeIB, rando, chain, amount, StrategyCurveIBVoterProxy, live_strategy, vault_balance, strategist_ms):
+def test_simple_harvest_and_tend(gov, token, vault, dudesahn, strategist, whale, voter, strategyProxy, gaugeIB, rando, chain, amount, StrategyCurveIBVoterProxy, live_strategy, vault_balance, strategist_ms):
     # Update deposit limit to the vault since it's currently maxed out
     vault.setDepositLimit(100000000000000000000000000, {"from": strategist_ms})
     
@@ -50,7 +50,14 @@ def test_simple_harvest(gov, token, vault, dudesahn, strategist, whale, voter, s
     old_assets_dai = vault.totalAssets()
     assert gaugeIB.balanceOf(voter) == strategyProxy.balanceOf(gaugeIB)
     assert old_assets_dai >= strategyProxy.balanceOf(gaugeIB)
-
+    
+    # simulate a day of earnings
+    chain.sleep(86400)
+    chain.mine(1)
+        
+    # tend our strategy 
+    strategy.tend({"from": dudesahn})
+    
     # simulate a month of earnings
     chain.sleep(2592000)
     chain.mine(1)
