@@ -38,10 +38,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CRV liquidity there
     address[] public crvPath;
 
-    uint256 public crvMinimum = 12500000000000000000000; // minimum amount of CRV needed for tend or harvest to trigger, default is 12,500 CRV
-    uint256 public tendProfitFactor = 250; // reevaluate this if CRV or gas price changes drastically, currently 100-300 gwei and $2.50/CRV
-    uint256 public harvestProfitFactor = 230; // reevaluate this if CRV or gas price changes drastically, currently 100-300 gwei and $2.50/CRV
-
     // this controls the number of tends before we harvest
     uint256 public tendCounter = 0;
     uint256 public tendsPerHarvest = 3;
@@ -73,7 +69,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
-        minReportDelay = 172800; // 2 days
+        minReportDelay = 302400; // 3.5 days
         maxReportDelay = 604800; // 7 days
         debtThreshold = 400 * 1e18; // we shouldn't ever have debt, but set a bit of a buffer
 
@@ -275,10 +271,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         return protected;
     }
-
-    // keeper functions
-
-    // set what will trigger our keepers to harvest
+    
     function harvestTrigger(uint256 callCostinEth)
         public
         view
@@ -315,32 +308,6 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         if (tendCounter < tendsPerHarvest) {
             return false;
         }
-
-        // check how much claimable CRV we have; this can only be done off-chain
-        uint256 claimableTokens =
-            IGauge(gauge).claimable_tokens(address(proxy));
-
-        // do stuff here when we have enough CRV
-        if (claimableTokens > crvMinimum) {
-            // determine how rich we get if we sell all of the CRV in our gauge
-            address[] memory harvestPath = new address[](3);
-            harvestPath[0] = address(crv);
-            harvestPath[1] = address(weth);
-            harvestPath[2] = address(dai);
-
-            uint256[] memory _crvDollarsOut =
-                IUniswapV2Router02(crvRouter).getAmountsOut(
-                    claimableTokens,
-                    harvestPath
-                );
-            uint256 crvDollarsOut = _crvDollarsOut[_crvDollarsOut.length - 1];
-
-            // calculate how much the call costs in dollars (converted from ETH)
-            uint256 callCost = ethToDollaBill(callCostinEth);
-
-            // if our profit is greater than the cost of the tend * our chosen multiple, then tend it!!
-            return harvestProfitFactor.mul(callCost) < crvDollarsOut;
-        }
     }
 
     // set what will trigger keepers to call tend, which will harvest and sell CRV for optimal asset but not deposit or report profits
@@ -350,78 +317,19 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         override
         returns (bool)
     {
-        // we need to call a harvest every once in a while
+        // we need to call a harvest every once in a while, every tendsPerHarvest number of tends
         if (tendCounter >= tendsPerHarvest) {
             return false;
-        }
-
-        // check how much claimable CRV we have; this can only be done off-chain
-        uint256 claimableTokens =
-            IGauge(gauge).claimable_tokens(address(proxy));
-
-        // do stuff here when we have enough CRV
-        if (claimableTokens > crvMinimum) {
-            // determine how rich we get if we sell all of the CRV in our gauge
-            address[] memory tendPath = new address[](3);
-            tendPath[0] = address(crv);
-            tendPath[1] = address(weth);
-            tendPath[2] = address(dai);
-
-            uint256[] memory _crvDollarsOut =
-                IUniswapV2Router02(crvRouter).getAmountsOut(
-                    claimableTokens,
-                    tendPath
-                );
-            uint256 crvDollarsOut = _crvDollarsOut[_crvDollarsOut.length - 1];
-
-            // calculate how much the call costs in dollars (converted from ETH)
-            uint256 callCost = ethToDollaBill(callCostinEth);
-
-            // if our profit is greater than the cost of the tend * our chosen multiple, then tend it!!
-            return tendProfitFactor.mul(callCost) < crvDollarsOut;
+            
+        // Tend should trigger once it has been the minimum time between harvests divided by 1+tendsPerHarvest to space out tends equally
+        // we multiply this number by the current tendCounter+1 to know where we are in time
+        // we are assuming here that keepers will essentially call tend as soon as this is true
+        if (block.timestamp.sub(params.lastReport) > (minReportDelay.div((tendCounter.add(1)).mul(tendsPerHarvest.add(1))))
+            return true;
         }
     }
-
-    // convert our keeper's eth cost into dai
-    function ethToDollaBill(uint256 _ethAmount)
-        internal
-        view
-        returns (uint256)
-    {
-        address[] memory ethPath = new address[](2);
-        ethPath[0] = address(weth);
-        ethPath[1] = address(dai);
-
-        uint256[] memory callCostInDai =
-            IUniswapV2Router02(crvRouter).getAmountsOut(_ethAmount, ethPath);
-
-        return callCostInDai[callCostInDai.length - 1];
-    }
-
-    // use these functions to set parameters for our triggers
     
-    // set minimum profit factor needed for tends
-    function setTendProfitFactor(uint256 _tendProfitFactor)
-        external
-        onlyAuthorized
-    {
-        tendProfitFactor = _tendProfitFactor;
-    }
-    
-    // set minimum profit factor needed for harvests
-    function setHarvestProfitFactor(uint256 _harvestProfitFactor)
-        external
-        onlyAuthorized
-    {
-        harvestProfitFactor = _harvestProfitFactor;
-    }
-    
-    // set minimum CRV needed in gauge to harvest or tend
-    function setCrvMin(uint256 _crvMinimum) external onlyAuthorized {
-        crvMinimum = _crvMinimum;
-    }
-    
-    // set number of tends before we default to a harvest
+    // set number of tends before we call our next harvest
     function setTendsPerHarvest(uint256 _tendsPerHarvest) external onlyAuthorized {
         tendsPerHarvest = _tendsPerHarvest;
     }
