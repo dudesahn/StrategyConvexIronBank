@@ -66,7 +66,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
         minReportDelay = 302400; // 3.5 days
-        maxReportDelay = 604800; // 7 days
+        maxReportDelay = 1209600; // 14 days
         debtThreshold = 400 * 1e18; // we shouldn't ever have debt, but set a bit of a buffer
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
