@@ -47,3 +47,13 @@ interface ICurveStrategyProxy {
 
     function claim(address recipient) external;
 }
+
+interface IVoter {
+    function execute(
+        address to,
+        uint value,
+        bytes calldata data
+    ) external returns (bool, bytes memory);
+
+    function increaseAmount(uint) external;
+}

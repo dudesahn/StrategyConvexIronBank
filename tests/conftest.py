@@ -51,9 +51,12 @@ def dudesahn(accounts):
     yield accounts.at("0x677Ae1C4FDa1A986a23a055Bbd0A94f8e5b284De", force=True)
 
 @pytest.fixture
+def vault_balance(accounts):
+    yield accounts.at("0x27b7b1ad7288079A66d12350c828D3C00A6F07d7", force=True)
+
+@pytest.fixture
 def rewards(accounts):
     yield accounts[0]
-
 
 @pytest.fixture
 def guardian(accounts):
@@ -98,27 +101,21 @@ def new_address(accounts):
 
 
 # Whale accounts
-
-
 @pytest.fixture
 def whale(accounts, token, reserve):
     # Totally in it for the tech
-    # Has 50% of tokens (was in the ICO)
-    a = accounts[6]
-    bal = token.totalSupply() // 2
-    token.transfer(a, bal, {"from": reserve})
-    yield a
-
+    acc = accounts.at('0xF5194c3325202F456c95c1Cf0cA36f8475C1949F', force=True)
+    yield acc
 
 # Define the amount of tokens that our whale will be using
-
-# @pytest.fixture
-# def amount(token, whale):
-#     # set the amount that our whale friend is going to throw around; pocket change, 5% of stack
-#     amount = token.balanceOf(whale) * 0.05
-#     yield amount
-
-# Set definitions for vault and strategy
+@pytest.fixture
+def amount(accounts, token, whale):
+    amount = Wei('1000 ether')
+    # In order to get some funds for the token you are about to use,
+    # it impersonate an exchange address to use it's funds.
+    reserve = whale
+    token.transfer(accounts[7], amount, {"from": reserve})
+    yield amount
 
 
 @pytest.fixture
@@ -127,14 +124,14 @@ def strategyProxy(interface):
     yield interface.ICurveStrategyProxy("0x9a165622a744C20E3B2CB443AeD98110a33a231b")
 
 
-@pytest.fixture
-def old_vault(pm, gov, rewards, guardian, management, token):
-    Vault = pm(config["dependencies"][0]).Vault
-    old_vault = guardian.deploy(Vault)
-    vault.initialize(token, gov, rewards, "", "", guardian)
-    old_vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
-    old_vault.setManagement(management, {"from": gov})
-    yield old_vault
+# @pytest.fixture
+# def vault(pm, gov, rewards, guardian, management, token):
+#     Vault = pm(config["dependencies"][0]).Vault
+#     vault = guardian.deploy(Vault)
+#     vault.initialize(token, gov, rewards, "", "", guardian)
+#     vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
+#     vault.setManagement(management, {"from": gov})
+#     yield vault
 
 @pytest.fixture
 def vault(pm):
@@ -142,19 +139,10 @@ def vault(pm):
     vault = Vault.at('0x27b7b1ad7288079A66d12350c828D3C00A6F07d7')
     yield vault
 
-
 @pytest.fixture
-def old_strategy(strategist, keeper, old_vault, StrategyCurveIBVoterProxy, gov, strategyProxy):
-    old_strategy = strategist.deploy(StrategyCurveIBVoterProxy, old_vault)
-    old_strategy.setKeeper(keeper)
-    strategyProxy.approveStrategy(old_strategy.gauge(), old_strategy, {"from": gov})
-    old_vault.addStrategy(old_strategy, 10000, 0, 2 ** 256 - 1, 1000, {"from": gov})
-    yield old_strategy
-
-@pytest.fixture
-def strategy(StrategyCurveIBVoterProxy):
-    strategy = StrategyCurveIBVoterProxy.at('0x5c0309fa022Bc1B73fE45A2D73EddeD58a820ff8')
-    yield strategy
+def live_strategy(StrategyCurveIBVoterProxy):
+    live_strategy = StrategyCurveIBVoterProxy.at('0x5c0309fa022Bc1B73fE45A2D73EddeD58a820ff8')
+    yield live_strategy
 
 
 # @pytest.fixture
