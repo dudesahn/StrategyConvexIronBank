@@ -48,9 +48,6 @@ def test_setters(gov, token, vault, new_address, dudesahn, strategist, whale, st
     strategy.setProxy(new_address, {"from": strategist_ms})
     assert strategy.proxy() == new_address
 
-    strategy.updateCheckLiqGauge(0, {"from": strategist_ms})
-    assert strategy.checkLiqGauge() == 0
-
     strategy.setKeepCRV(2000, {"from": strategist_ms})
     assert strategy.keepCRV() > 1000
 
