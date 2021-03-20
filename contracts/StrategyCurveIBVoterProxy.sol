@@ -40,7 +40,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     // this controls the number of tends before we harvest
     uint256 public tendCounter = 0;
-    uint256 public tendsPerHarvest = 3;
+    uint256 public tendsPerHarvest = 0; // how many tends we call before we harvest. set to 0 to never call tends.
     uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
 
     ICrvV3 public constant crv =
