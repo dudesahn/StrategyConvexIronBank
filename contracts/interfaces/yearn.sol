@@ -51,9 +51,9 @@ interface ICurveStrategyProxy {
 interface IVoter {
     function execute(
         address to,
-        uint value,
+        uint256 value,
         bytes calldata data
     ) external returns (bool, bytes memory);
 
-    function increaseAmount(uint) external;
+    function increaseAmount(uint256) external;
 }

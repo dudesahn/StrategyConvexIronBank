@@ -250,7 +250,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         return protected;
     }
-    
+
     function harvestTrigger(uint256 callCostinEth)
         public
         view
@@ -296,19 +296,29 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     {
         // we need to call a harvest every once in a while, every tendsPerHarvest number of tends
         if (tendCounter >= tendsPerHarvest) return false;
-        
+
         StrategyParams memory params = vault.strategies(address(this));
         // Tend should trigger once it has been the minimum time between harvests divided by 1+tendsPerHarvest to space out tends equally
         // we multiply this number by the current tendCounter+1 to know where we are in time
         // we are assuming here that keepers will essentially call tend as soon as this is true
-        if (block.timestamp.sub(params.lastReport) > (minReportDelay.div((tendCounter.add(1)).mul(tendsPerHarvest.add(1))))) return true;
+        if (
+            block.timestamp.sub(params.lastReport) >
+            (
+                minReportDelay.div(
+                    (tendCounter.add(1)).mul(tendsPerHarvest.add(1))
+                )
+            )
+        ) return true;
     }
-    
+
     // set number of tends before we call our next harvest
-    function setTendsPerHarvest(uint256 _tendsPerHarvest) external onlyAuthorized {
+    function setTendsPerHarvest(uint256 _tendsPerHarvest)
+        external
+        onlyAuthorized
+    {
         tendsPerHarvest = _tendsPerHarvest;
     }
-    
+
     // setter functions
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
 
