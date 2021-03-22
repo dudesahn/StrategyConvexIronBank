@@ -1,10 +1,13 @@
 def gov_to_daddy():
+	assert rpc.is_active()
 	multisig = accounts.at("0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52", force=True)
 	vault = Contract("0x27b7b1ad7288079A66d12350c828D3C00A6F07d7")
 	strategist_ms = accounts.at("0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7", force=True)
 	vault.setGovernance(multisig, {"from": strategist_ms})
 
-
+	safe_tx = multisend_from_receipts(strategist_ms, history)
+	estimate_safe_tx(safe_tx)
+	broadcast_tx(safe_tx)
 
 def migrate_ib():
 	assert rpc.is_active()
@@ -23,11 +26,7 @@ def migrate_ib():
 	# harvest and migrate our old strategy. this will set debt ratio to 0 on current strategy
 	live_strategy.harvest({"from": multisig})
 	vault.migrateStrategy(live_strategy, new_strategy, {"from": multisig})
-	
-	# harvest to remove funds from old strategy
-	live_strategy.harvest({"from": multisig})
-	live_strat_balance = live_strategy.estimatedTotalAssets({"from": multisig})
-	assert live_strat_balance == 0
+	assert live_strategy.estimatedTotalAssets() == 0
 	
 	# Set our proxy address on old strategy to burn address to be safe, and transfer gov to daddy
 	live_strategy.setProxy("0x0000000000000000000000000000000000000000", {"from": multisig})
@@ -47,6 +46,7 @@ def migrate_ib():
 	# approve our new strategy on proxy and adjust debt ratio
 	strategyProxy.approveStrategy(new_strategy.gauge(), new_strategy, {"from": multisig})
 	vault.updateStrategyDebtRatio(new_strategy, 9800, {"from": multisig})
+	assert new_strategy.estimatedTotalAssets() > 0
 	
 	# Update deposit limit to the vault to $10 million since it's currently maxed out
 	vault.setDepositLimit(10000000000000000000000000, {"from": multisig})
@@ -54,10 +54,7 @@ def migrate_ib():
 	assert vault.managementFee() == 200
 	registry.endorseVault("0x27b7b1ad7288079A66d12350c828D3C00A6F07d7", {"from": multisig})
 	
-	# harvest to get funds back in strategy
-	new_strategy.harvest({"from": multisig})
-	new_gauge_balance = strategyProxy.balanceOf(gaugeIB)
-	assert new_gauge_balance > 0
+	# will still need to harvest myself manually once this is done
 	
 	safe_tx = multisend_from_receipts(multisig, history)
 	estimate_safe_tx(safe_tx)
