@@ -56,6 +56,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
+    uint256 public manualKeep3rHarvest = 0;
 
     uint256 public constant USE_SUSHI = 1;
     address public constant sushiswapRouter =
@@ -68,6 +69,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         minReportDelay = 302400; // 3.5 days
         maxReportDelay = 1209600; // 14 days
         debtThreshold = 400 * 1e18; // we shouldn't ever have debt, but set a bit of a buffer
+        profitFactor = 4000 // in this strategy, profitFactor is only used for telling keep3rs when to move funds from vault to strategy
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
         want.safeApprove(address(proxy), uint256(-1));
@@ -134,6 +136,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         // this is a harvest, so set our switch equal to 1 so this
         // performs as a harvest the whole way through
         harvestNow = 1;
+        
+        // if this was the result of a manual keep3r harvest, then reset our trigger
+        if (manualKeep3rHarvest == 1) manualKeep3rHarvest = 0;
+        
         // serious loss should never happen, but if it does (for instance, if Curve is hacked), let's record it accurately
         uint256 assets = estimatedTotalAssets();
         uint256 debt = vault.strategies(address(this)).totalDebt;
@@ -258,6 +264,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         returns (bool)
     {
         StrategyParams memory params = vault.strategies(address(this));
+        
+        // have a manual toggle switch if needed since keep3rs are more efficient than manual harvest
+        if (manualKeep3rHarvest == 1) return true;
 
         // Should not trigger if Strategy is not activated
         if (params.activation == 0) return false;
@@ -285,6 +294,15 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         // no need to spend the gas to harvest every time; tend is much cheaper
         if (tendCounter < tendsPerHarvest) return false;
+        
+        // Trigger if it makes sense for the vault to send funds idle funds from the vault to the strategy. For future, non-Curve
+        // strategies, it makes more sense to make this a trigger separate from profitFactor. If I start using tend meaningfully,
+        // would perhaps make sense to add in any DAI, USDC, or USDT sitting in the strategy as well since that would be added to 
+        // the gauge as well. 
+        uint256 profit = 0;
+        if (total > params.totalDebt) profit = total.sub(params.totalDebt); // We've earned a profit!
+        uint256 credit = vault.creditAvailable();
+        return (profitFactor.mul(callCost) < credit.add(profit));
     }
 
     // set what will trigger keepers to call tend, which will harvest and sell CRV for optimal asset but not deposit or report profits
@@ -317,6 +335,11 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         onlyAuthorized
     {
         tendsPerHarvest = _tendsPerHarvest;
+    }
+
+	// set this to 1 if we want our keep3rs to manually harvest the strategy; keep3r harvest is more cost-efficient than strategist harvest
+    function setKeep3rHarvest(uint256 _setKeep3rHarvest) {
+    	manualKeep3rHarvest = _setKeep3rHarvest;
     }
 
     // setter functions
