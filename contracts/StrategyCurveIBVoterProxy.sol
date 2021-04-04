@@ -338,7 +338,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
 	// set this to 1 if we want our keep3rs to manually harvest the strategy; keep3r harvest is more cost-efficient than strategist harvest
-    function setKeep3rHarvest(uint256 _setKeep3rHarvest) {
+    function setKeep3rHarvest(uint256 _setKeep3rHarvest) external onlyAuthorized {
     	manualKeep3rHarvest = _setKeep3rHarvest;
     }
 
