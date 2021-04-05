@@ -69,7 +69,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         minReportDelay = 302400; // 3.5 days
         maxReportDelay = 1209600; // 14 days
         debtThreshold = 400 * 1e18; // we shouldn't ever have debt, but set a bit of a buffer
-        profitFactor = 4000 // in this strategy, profitFactor is only used for telling keep3rs when to move funds from vault to strategy
+        profitFactor = 4000; // in this strategy, profitFactor is only used for telling keep3rs when to move funds from vault to strategy
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
         want.safeApprove(address(proxy), uint256(-1));
@@ -301,6 +301,10 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         // the gauge as well. 
         uint256 profit = 0;
         if (total > params.totalDebt) profit = total.sub(params.totalDebt); // We've earned a profit!
+        
+        // calculate how much the call costs in dollars (converted from ETH)
+        uint256 callCost = ethToDollaBill(callCostinEth);
+        
         uint256 credit = vault.creditAvailable();
         return (profitFactor.mul(callCost) < credit.add(profit));
     }
@@ -328,6 +332,17 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             )
         ) return true;
     }
+
+    // convert our keeper's eth cost into dai
+    function ethToDollaBill(uint256 _ethAmount) internal view returns (uint256) {
+        address[] memory ethPath = new address[](2);
+        ethPath[0] = address(weth);
+        ethPath[1] = address(dai);
+
+        uint256[] memory callCostInDai = IUniswapV2Router02(crvRouter).getAmountsOut(_ethAmount, ethPath);
+
+        return callCostInDai[callCostInDai.length - 1];
+    	}
 
     // set number of tends before we call our next harvest
     function setTendsPerHarvest(uint256 _tendsPerHarvest)
