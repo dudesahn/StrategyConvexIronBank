@@ -173,6 +173,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     function adjustPosition(uint256 _debtOutstanding) internal override {
+        if (emergencyExit) {
+            return;
+        }
         if (harvestNow == 1) {
             // if this is part of a harvest call, send all of our Iron Bank pool tokens to the proxy and deposit to the gauge
             uint256 _toInvest = want.balanceOf(address(this));
