@@ -21,23 +21,23 @@ import {
 
 interface IConvexRewards {
 	// staked balance
-	function balanceOf(address account) public view returns (uint256);
-	function earned(address account) public view returns (uint256);
+	function balanceOf(address account) external view returns (uint256);
+	function earned(address account) external view returns (uint256);
     // stake a convex tokenized deposit
-	function stake(uint256 _amount) public returns(bool);
+	function stake(uint256 _amount) external returns(bool);
     // withdraw to a convex tokenized deposit, probably never need to use this
     function withdraw(uint256 _amount, bool _claim) external returns(bool);
     // withdraw directly to curve LP token
     function withdrawAndUnwrap(uint256 _amount, bool _claim) external returns(bool);
     // claim rewards
-	function getReward(address _account, bool _claimExtras) public returns(bool);
+	function getReward(address _account, bool _claimExtras) external returns(bool);
 }
 
 interface IConvexDeposit {
     //deposit into convex, receive a tokenized deposit.  parameter to stake immediately
-	function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool);
+	function deposit(uint256 _pid, uint256 _amount, bool _stake) external returns(bool);
     //burn a tokenized deposit to receive curve lp tokens back
-	function withdraw(uint256 _pid, uint256 _amount) public returns(bool);
+	function withdraw(uint256 _pid, uint256 _amount) external returns(bool);
 }
 
     /* ========== CONTRACT ========== */
@@ -197,8 +197,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
 
         // debtOustanding will only be > 0 in the event of revoking or lowering debtRatio of a strategy
         if (_debtOutstanding > 0) {
-        	uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
-    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedBalance, _debtOutstanding), true);
+    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedTokens, _debtOutstanding), true);
 
             _debtPayment = Math.min(
                 _debtOutstanding,
@@ -216,7 +215,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
             // if this is part of a harvest call, send all of our Iron Bank pool tokens to be deposited
             uint256 _toInvest = want.balanceOf(address(this));
             //deposit into convex and stake immediately
-            IConvexDeposit(convex).deposit(pid, _toInvest, true);
+            IConvexDeposit(depositContract).deposit(pid, _toInvest, true);
             // since we've completed our harvest call, reset our tend counter and our harvest now
             tendCounter = 0;
             harvestNow = 0;
@@ -251,7 +250,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
         uint256 wantBal = want.balanceOf(address(this));
         if (_amountNeeded > wantBal) {
             uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
-    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedBalance, _amountNeeded - wantBal), true);
+    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedTokens, _amountNeeded - wantBal), true);
     		
             uint256 withdrawnBal = want.balanceOf(address(this));
             _liquidatedAmount = Math.min(_amountNeeded, withdrawnBal);
@@ -292,21 +291,21 @@ contract StrategyConvexCurveLP is BaseStrategy {
 	// if we need to exit without claiming any rewards, this is probably the best way (anything with staking contract auto-triggers claiming, even if we don't get the rewards)
 	// make sure to check claimRewards before this step if needed
     function emergencyWithdraw(uint256 _withdrawalMethod) external onlyAuthorized {
-        uint256 stakedBalance = IConvexRewards(rewardsContract).balanceOf(address(this));
+        uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
     	if (_withdrawalMethod == 0) { // this is withdrawing without touching rewards in any shape and completely avoids the staking contract
-    		IConvexDeposit(depositContract).withdraw(pid, stakedBalance);
+    		IConvexDeposit(depositContract).withdraw(pid, stakedTokens);
     	} else if (_withdrawalMethod == 1) { // this is withdrawing and unwrapping
-    		IConvexRewards(rewardsContract).withdrawAndUnwrap(stakedBalance, claimRewards);
+    		IConvexRewards(rewardsContract).withdrawAndUnwrap(stakedTokens, claimRewards);
     	} else { // this is withdrawing to the wrapped cvx vault token
-    		IConvexRewards(rewardsContract).withdraw(stakedBalance, claimRewards);
+    		IConvexRewards(rewardsContract).withdraw(stakedTokens, claimRewards);
     	}
     }
 	
 	// migrate our want token to a new strategy if needed, make sure to check claimRewards first
     function prepareMigration(address _newStrategy) internal override {
-        uint256 stakedBalance = IConvexRewards(rewardsContract).balanceOf(address(this));
-        if (stakedBalance > 0) {
-        	IConvexRewards(rewardsContract).withdrawAndUnwrap(stakedBalance, claimRewards);
+        uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
+        if (stakedTokens > 0) {
+        	IConvexRewards(rewardsContract).withdrawAndUnwrap(stakedTokens, claimRewards);
         }
     }
 

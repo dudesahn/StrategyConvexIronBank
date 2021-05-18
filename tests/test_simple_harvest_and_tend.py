@@ -19,46 +19,20 @@ def test_simple_harvest_and_tend(gov, token, vault, dudesahn, strategist, whale,
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
-    
-    # Test out our migrated strategy, confirm we're making a profit
+
+    # harvest after a day, store new asset amount
     strategy.harvest({"from": gov})
-    assert strategy.tendCounter() == 0
-    vaultAssets_2 = strategy.estimatedTotalAssets()
-    assert vaultAssets_2 > old_assets_dai
-    print("\nAssets after 1 day harvest: ", vaultAssets_2)
+    # tx.call_trace(True)
+    new_assets_dai = strategy.estimatedTotalAssets()
+    assert new_assets_dai > old_assets_dai
+
+    # Display estimated APR based on the past day
+    print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai - old_assets_dai) * 365) / (old_assets_dai)))
     
-    staked_LP = masterchef.getStakeTotalDeposited(strategy, 4)
-    print("\nStaked LP: ", (staked_LP / 1e18))
-    assert masterchef.getStakeTotalDeposited(strategy, 4) > 0
-
-    # harvest after a day, store new asset amount
-    strategy.harvest({"from": liveGov})
-    # tx.call_trace(True)
-    new_assets_dai = strategy.estimatedTotalAssets()
-    assert new_assets_dai > old_assets_dai
-
-    # Display estimated APR based on the past day
-    print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai - old_assets_dai) * 365) / (old_assets_dai)))
-
-    # we lose 0.04% whenever we deposit into a curve pool or withdraw
-    # withdraw whale's money and see if he's earned a profit (barely even with 0.08% loss)
+    # simulate a day of waiting for share price to bump back up
+    chain.sleep(86400)
+    chain.mine(1)
+    
+    # withdraw and confirm we made money
     vault.withdraw({"from": whale})    
-    print("This started as 1000 pool tokens", ( token.balanceOf(whale) - newWhale ) / 1e18)
-    assert token.balanceOf(whale) > startingWhale    staked_LP = masterchef.getStakeTotalDeposited(strategy, 4)
-    print("\nStaked LP: ", (staked_LP / 1e18))
-    assert masterchef.getStakeTotalDeposited(strategy, 4) > 0
-
-    # harvest after a day, store new asset amount
-    strategy.harvest({"from": liveGov})
-    # tx.call_trace(True)
-    new_assets_dai = strategy.estimatedTotalAssets()
-    assert new_assets_dai > old_assets_dai
-
-    # Display estimated APR based on the past day
-    print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai - old_assets_dai) * 365) / (old_assets_dai)))
-
-    # we lose 0.04% whenever we deposit into a curve pool or withdraw
-    # withdraw whale's money and see if he's earned a profit (barely even with 0.08% loss)
-    vault.withdraw({"from": whale})    
-    print("This started as 1000 DAI", ( token.balanceOf(whale) - newWhale ) / 1e18)
-    assert token.balanceOf(whale) > startingWhale
+    assert token.balanceOf(whale) > startingWhale 
