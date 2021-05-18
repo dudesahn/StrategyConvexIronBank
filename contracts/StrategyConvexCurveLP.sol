@@ -2,7 +2,15 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-// These are the core Yearn libraries
+// all vaults will have their own separate reward contract address; none of these are verified
+// this appears to be the reward contract: https://github.com/convex-eth/platform/blob/main/contracts/contracts/BaseRewardPool.sol
+// this is the deposit contractt they all use: https://etherscan.io/address/0xF403C135812408BFbE8713b5A23a04b3D48AAE31
+// build in backup emergency exit directly from the synthetix staking contract?
+
+// withdrawing from the proxy actually seems preferable for normal withdrawals, and also for emergencies perhaps, but would be good to have direct withdrawals from staking contract as an option
+
+    /* ========== CORE LIBRARIES ========== */
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -10,41 +18,65 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 
 import "./interfaces/curve.sol";
-import "./interfaces/yearn.sol";
 import {IUniswapV2Router02} from "./interfaces/uniswap.sol";
 import {
     BaseStrategy,
     StrategyParams
 } from "@yearnvaults/contracts/BaseStrategy.sol";
 
-contract StrategyCurveIBVoterProxy is BaseStrategy {
+    /* ========== INTERFACES ========== */
+
+interface IConvexRewards {
+	// staked balance
+	function balanceOf(address account) public view returns (uint256);
+	function earned(address account) public view returns (uint256);
+    // stake a convex tokenized deposit
+	function stake(uint256 _amount) public returns(bool);
+    // withdraw to a convex tokenized deposit, probably never need to use this
+    function withdraw(uint256 _amount, bool _claim) external returns(bool);
+    // withdraw directly to curve LP token
+    function withdrawAndUnwrap(uint256 _amount, bool _claim) external returns(bool);
+    // claim rewards
+	function getReward(address _account, bool _claimExtras) public returns(bool);
+}
+
+interface IConvexDeposit {
+    //deposit into convex, receive a tokenized deposit.  parameter to stake immediately
+	function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool);
+    //burn a tokenized deposit to receive curve lp tokens back
+	function withdraw(uint256 _pid, uint256 _amount) public returns(bool);
+}
+
+    /* ========== CONTRACT ========== */
+
+contract StrategyConvexCurveLP is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
 
-    address public constant gauge =
-        address(0xF5194c3325202F456c95c1Cf0cA36f8475C1949F); // Curve Iron Bank Gauge contract, v2 is tokenized, held by Yearn's voter
-    ICurveStrategyProxy public proxy =
-        ICurveStrategyProxy(
-            address(0x9a165622a744C20E3B2CB443AeD98110a33a231b)
-        ); // Yearn's Updated v3 StrategyProxy
-
-    uint256 public optimal = 0;
-
-    ICurveFi public constant curve =
-        ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool
-    address public voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
-    address public crvRouter =
-        address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CRV liquidity there
+    address public curve = 0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF; // Curve Iron Bank Pool, want to be able to set this for other strats. need this for buying more pool tokens
+    address public crvRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CRV liquidity there
+    address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
     address[] public crvPath;
+    address[] public convexTokenPath;
+    
+    address public depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools seem to use, aka booster
+    address public rewardsContract = 0x3E03fFF82F77073cc590b656D42FceB12E4910A8; // want to add this to the constructor or at least setter since this is unique to each pool. This one is for Iron Bank pool
+    uint256 public pid = 29; // this is unique to each pool
+    uint256 public optimal = 0; // this is the optimal token to deposit back to our curve pool
 
     // this controls the number of tends before we harvest
     uint256 public tendCounter = 0;
     uint256 public tendsPerHarvest = 0; // how many tends we call before we harvest. set to 0 to never call tends.
     uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
 
+    uint256 public keepCRV = 1500;
+    uint256 public constant FEE_DENOMINATOR = 10000; // with this and the above, sending 15% of our CRV yield to our voter
+
     ICrvV3 public constant crv =
         ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
+    IERC20 public constant convexToken =
+        IERC20(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
     IERC20 public constant weth =
         IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
     IERC20 public constant dai =
@@ -54,16 +86,18 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     IERC20 public constant usdt =
         IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
 
-    uint256 public keepCRV = 1000;
-    uint256 public constant FEE_DENOMINATOR = 10000;
     uint256 public manualKeep3rHarvest = 0;
+    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards
+    bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing, typically don't need to
 
-    uint256 public constant USE_SUSHI = 1;
+    uint256 public USE_SUSHI = 1; // if 1, use sushiswap as our router
     address public constant sushiswapRouter =
         address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
     address public constant uniswapRouter =
         address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
 
+
+	// TODO FOR ORB'S VAULTS– ADD CLONING 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
         minReportDelay = 302400; // 3.5 days
@@ -72,30 +106,38 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         profitFactor = 4000; // in this strategy, profitFactor is only used for telling keep3rs when to move funds from vault to strategy
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
-        want.safeApprove(address(proxy), uint256(-1));
+        want.safeApprove(address(depositContract), uint256(-1));
 
         // add approvals for crv on sushiswap and uniswap due to weird crv approval issues for setCrvRouter
         // add approvals on all tokens
         crv.approve(uniswapRouter, uint256(-1));
         crv.approve(sushiswapRouter, uint256(-1));
+        convexToken.approve(uniswapRouter, uint256(-1));
+        convexToken.approve(sushiswapRouter, uint256(-1));
         dai.safeApprove(address(curve), uint256(-1));
         usdc.safeApprove(address(curve), uint256(-1));
         usdt.safeApprove(address(curve), uint256(-1));
-
+        
+        // crv token path
         crvPath = new address[](3);
         crvPath[0] = address(crv);
         crvPath[1] = address(weth);
         crvPath[2] = address(dai);
+        
+        // convex token path
+        convexTokenPath = new address[](3);
+        convexTokenPath[0] = address(convexToken);
+        convexTokenPath[1] = address(weth);
+        convexTokenPath[2] = address(dai);
     }
 
     function name() external view override returns (string memory) {
-        // Add your own name here, suggestion e.g. "StrategyCreamYFI"
-        return "StrategyCurveIBVoterProxy";
+        return "StrategyConvexCurveLP";
     }
 
-    // total assets held by strategy
+    // total assets held by strategy. loose funds in strategy and all staked funds
     function estimatedTotalAssets() public view override returns (uint256) {
-        return proxy.balanceOf(gauge).add(want.balanceOf(address(this)));
+        return IConvexRewards(rewardsContract).balanceOf(address(this)).add(want.balanceOf(address(this)));
     }
 
     function prepareReturn(uint256 _debtOutstanding)
@@ -111,16 +153,21 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         // NOTE: Return `_profit` which is value generated by all positions, priced in `want`
         // NOTE: Should try to free up at least `_debtOutstanding` of underlying position
 
-        // if we have anything in the gauge, then harvest CRV from the gauge
-        uint256 gaugeTokens = proxy.balanceOf(gauge);
-        if (gaugeTokens > 0) {
-            proxy.harvest(gauge);
+        // if we have anything staked, then harvest CRV and CVX from the rewards contract
+        uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
+        if (stakedTokens > 0) {
+        	// if for some reason we don't want extra rewards, make sure we don't harvest them
+        	IConvexRewards(rewardsContract).getReward(address(this), harvestExtras);
+        	
             uint256 crvBalance = crv.balanceOf(address(this));
+            uint256 convexBalance = convexToken.balanceOf(address(this));
+
             uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
             IERC20(address(crv)).safeTransfer(voter, _keepCRV);
             uint256 crvRemainder = crvBalance.sub(_keepCRV);
 
-            _sell(crvRemainder);
+            _sellCrv(crvRemainder);
+            _sellConvex(convexBalance);
 
             if (optimal == 0) {
                 uint256 daiBalance = dai.balanceOf(address(this));
@@ -156,12 +203,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         // debtOustanding will only be > 0 in the event of revoking or lowering debtRatio of a strategy
         if (_debtOutstanding > 0) {
-            uint256 stakedBal = proxy.balanceOf(gauge);
-            proxy.withdraw(
-                gauge,
-                address(want),
-                Math.min(stakedBal, _debtOutstanding)
-            );
+        	uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
+    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedBalance, _debtOutstanding), true);
 
             _debtPayment = Math.min(
                 _debtOutstanding,
@@ -175,27 +218,34 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         if (emergencyExit) {
             return;
-        }
-        else if (harvestNow == 1) {
-            // if this is part of a harvest call, send all of our Iron Bank pool tokens to the proxy and deposit to the gauge
+        } else if (harvestNow == 1) {
+            // if this is part of a harvest call, send all of our Iron Bank pool tokens to be deposited
             uint256 _toInvest = want.balanceOf(address(this));
-            want.safeTransfer(address(proxy), _toInvest);
-            proxy.deposit(gauge, address(want));
+            //deposit into convex and stake immediately
+            IConvexDeposit(convex).deposit(pid, _toInvest, true);
             // since we've completed our harvest call, reset our tend counter and our harvest now
             tendCounter = 0;
             harvestNow = 0;
         } else {
-            // This is our tend call. Check the gauge for CRV, then harvest gauge CRV and sell for preferred asset, but don't deposit.
-            proxy.harvest(gauge);
-            uint256 crvBalance = crv.balanceOf(address(this));
-            uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
-            IERC20(address(crv)).safeTransfer(voter, _keepCRV);
-            uint256 crvRemainder = crvBalance.sub(_keepCRV);
+            // This is our tend call. If we have anything staked, then harvest CRV and CVX from the rewards contract
+        	uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
+        	if (stakedTokens > 0) {
+        		// if for some reason we don't want extra rewards, make sure we don't harvest them
+        		IConvexRewards(rewardsContract).getReward(address(this), harvestExtras);
+        	
+            	uint256 crvBalance = crv.balanceOf(address(this));
+            	uint256 convexBalance = convexToken.balanceOf(address(this));
 
-            _sell(crvRemainder);
-            // increase our tend counter by 1 so we can know when we should harvest again
-            uint256 previousTendCounter = tendCounter;
-            tendCounter = previousTendCounter.add(1);
+            	uint256 _keepCRV = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
+            	IERC20(address(crv)).safeTransfer(voter, _keepCRV);
+            	uint256 crvRemainder = crvBalance.sub(_keepCRV);
+
+            	_sellCrv(crvRemainder);
+            	_sellConvex(convexBalance);
+            	// increase our tend counter by 1 so we can know when we should harvest again
+            	uint256 previousTendCounter = tendCounter;
+            	tendCounter = previousTendCounter.add(1);
+            }
         }
     }
 
@@ -206,12 +256,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     {
         uint256 wantBal = want.balanceOf(address(this));
         if (_amountNeeded > wantBal) {
-            uint256 stakedBal = proxy.balanceOf(gauge);
-            proxy.withdraw(
-                gauge,
-                address(want),
-                Math.min(stakedBal, _amountNeeded - wantBal)
-            );
+            uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
+    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedBalance, _amountNeeded - wantBal), true);
+    		
             uint256 withdrawnBal = want.balanceOf(address(this));
             _liquidatedAmount = Math.min(_amountNeeded, withdrawnBal);
 
@@ -227,7 +274,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     }
 
     // Sells our harvested CRV into the selected output (DAI, USDC, or USDT).
-    function _sell(uint256 _amount) internal {
+    function _sellCrv(uint256 _amount) internal {
         IUniswapV2Router02(crvRouter).swapExactTokensForTokens(
             _amount,
             uint256(0),
@@ -236,14 +283,40 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             now
         );
     }
+    
+    // Sells our harvested CVX into the selected output (DAI, USDC, or USDT).
+    function _sellConvex(uint256 _amount) internal {
+        IUniswapV2Router02(crvRouter).swapExactTokensForTokens(
+            _amount,
+            uint256(0),
+            convexTokenPath,
+            address(this),
+            now
+        );
+    }
 
+	// if we need to exit without claiming any rewards, this is probably the best way (anything with staking contract auto-triggers claiming, even if we don't get the rewards)
+	// make sure to check claimRewards before this step if needed
+    function emergencyWithdraw(uint256 _withdrawalMethod) external onlyAuthorized {
+        uint256 stakedBalance = IConvexRewards(rewardsContract).balanceOf(address(this));
+    	if (_withdrawalMethod == 0) { // this is withdrawing without touching rewards in any shape and completely avoids the staking contract
+    		IConvexDeposit(depositContract).withdraw(pid, stakedBalance);
+    	} else if (_withdrawalMethod == 1) { // this is withdrawing and unwrapping
+    		IConvexRewards(rewardsContract).withdrawAndUnwrap(stakedBalance, claimRewards);
+    	} else { // this is withdrawing to the wrapped cvx vault token
+    		IConvexRewards(rewardsContract).withdraw(stakedBalance, claimRewards);
+    	}
+    }
+	
+	// migrate our want token to a new strategy if needed, make sure to check claimRewards first
     function prepareMigration(address _newStrategy) internal override {
-        uint256 gaugeTokens = proxy.balanceOf(gauge);
-        if (gaugeTokens > 0) {
-            proxy.withdraw(gauge, address(want), gaugeTokens);
+        uint256 stakedBalance = IConvexRewards(rewardsContract).balanceOf(address(this));
+        if (stakedBalance > 0) {
+        	IConvexRewards(rewardsContract).withdrawAndUnwrap(stakedBalance, claimRewards);
         }
     }
 
+	// we don't want for these tokens to be swept out
     function protectedTokens()
         internal
         view
@@ -251,7 +324,7 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         returns (address[] memory)
     {
         address[] memory protected = new address[](5);
-        protected[0] = gauge;
+        protected[0] = address(convexToken);
         protected[1] = address(crv);
         protected[2] = address(dai);
         protected[3] = address(usdt);
@@ -259,6 +332,8 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
 
         return protected;
     }
+    
+    /* ========== KEEP3RS ========== */
 
     function harvestTrigger(uint256 callCostinEth)
         public
@@ -360,13 +435,9 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
     	manualKeep3rHarvest = _setKeep3rHarvest;
     }
 
-    // setter functions
+    /* ========== SETTERS ========== */
+    
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
-
-    // Use to update Yearn's StrategyProxy contract as needed in case of upgrades.
-    function setProxy(address _proxy) external onlyGovernance {
-        proxy = ICurveStrategyProxy(_proxy);
-    }
 
     // Set the amount of CRV to be locked in Yearn's veCRV voter from each harvest. Default is 10%.
     function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
@@ -383,10 +454,15 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
             crvRouter = uniswapRouter;
         }
     }
+    
+    // Unless contract is borked for some reason, we should always harvest extra tokens
+    function setHarvestExtras(bool _harvestExtras) external onlyAuthorized {
+            harvestExtras = _harvestExtras;
+    }
 
-    // Set Yearn's veCRV voter address, useful in case of contract upgrade
-    function setVoter(address _voter) external onlyGovernance {
-        voter = _voter;
+    // We usually don't need to claim rewards on withdrawals, but might change our mind for migrations etc
+    function setClaimRewards(bool _claimRewards) external onlyAuthorized {
+            claimRewards = _claimRewards;
     }
 
     // Set optimal token to sell harvested CRV into for depositing back to Iron Bank Curve pool.
@@ -395,15 +471,22 @@ contract StrategyCurveIBVoterProxy is BaseStrategy {
         crvPath = new address[](3);
         crvPath[0] = address(crv);
         crvPath[1] = address(weth);
+        
+        convexTokenPath = new address[](3);
+        convexTokenPath[0] = address(convexToken);
+        convexTokenPath[1] = address(weth);
 
         if (_optimal == 0) {
             crvPath[2] = address(dai);
+            convexTokenPath[2] = address(dai);
             optimal = 0;
         } else if (_optimal == 1) {
             crvPath[2] = address(usdc);
+            convexTokenPath[2] = address(usdc);
             optimal = 1;
         } else if (_optimal == 2) {
             crvPath[2] = address(usdt);
+            convexTokenPath[2] = address(usdt);
             optimal = 2;
         } else {
             require(false, "incorrect token");
