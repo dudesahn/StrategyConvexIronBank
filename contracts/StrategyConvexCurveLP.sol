@@ -70,7 +70,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     ICrvV3 public constant crv =
         ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
     IERC20 public constant convexToken =
-        IERC20(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
+        IERC20(address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B));
     IERC20 public constant weth =
         IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
     IERC20 public constant dai =
