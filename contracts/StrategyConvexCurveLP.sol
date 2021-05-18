@@ -2,13 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-// all vaults will have their own separate reward contract address; none of these are verified
-// this appears to be the reward contract: https://github.com/convex-eth/platform/blob/main/contracts/contracts/BaseRewardPool.sol
-// this is the deposit contractt they all use: https://etherscan.io/address/0xF403C135812408BFbE8713b5A23a04b3D48AAE31
-// build in backup emergency exit directly from the synthetix staking contract?
-
-// withdrawing from the proxy actually seems preferable for normal withdrawals, and also for emergencies perhaps, but would be good to have direct withdrawals from staking contract as an option
-
     /* ========== CORE LIBRARIES ========== */
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -60,6 +53,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     address[] public crvPath;
     address[] public convexTokenPath;
     
+    // all vaults will have their own separate reward contract address; none of these are verified yet
     address public depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools seem to use, aka booster
     address public rewardsContract = 0x3E03fFF82F77073cc590b656D42FceB12E4910A8; // want to add this to the constructor or at least setter since this is unique to each pool. This one is for Iron Bank pool
     uint256 public pid = 29; // this is unique to each pool
