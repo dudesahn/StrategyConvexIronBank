@@ -47,7 +47,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     using Address for address;
     using SafeMath for uint256;
 
-    address public curve = 0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF; // Curve Iron Bank Pool, want to be able to set this for other strats. need this for buying more pool tokens
+    ICurveFi public constant curve = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool, want to be able to set this for other strats. need this for buying more pool tokens
     address public crvRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CRV liquidity there
     address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
     address[] public crvPath;
@@ -64,7 +64,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     uint256 public tendsPerHarvest = 0; // how many tends we call before we harvest. set to 0 to never call tends.
     uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
 
-    uint256 public keepCRV = 1500;
+    uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000; // with this and the above, sending 15% of our CRV yield to our voter
 
     ICrvV3 public constant crv =
