@@ -27,6 +27,9 @@ def cvx():
 def dai():
     yield Contract("0x6B175474E89094C44Da98b954EedeAC495271d0F")
 
+@pytest.fixture
+def rewardsContract():
+    yield Contract("0x3E03fFF82F77073cc590b656D42FceB12E4910A8")
 
 @pytest.fixture
 def voter():

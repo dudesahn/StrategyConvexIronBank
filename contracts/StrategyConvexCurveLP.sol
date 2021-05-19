@@ -49,6 +49,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
 
     ICurveFi public constant curve = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool, want to be able to set this for other strats. need this for buying more pool tokens
     address public crvRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CRV liquidity there
+    address public cvxRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CVX liquidity there
     address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
     address[] public crvPath;
     address[] public convexTokenPath;
@@ -426,15 +427,17 @@ contract StrategyConvexCurveLP is BaseStrategy {
 
     // convert our unsold CRV and CVX into USD profit for our keep3r
     function claimableProfitInDolla() internal view returns (uint256) {
-    	uint256 claimableCrv = IAlchemix(alchemixStaking).earned(address(this)); // how much CRV we can claim from the staking contract
+    	uint256 claimableCrv = IConvexRewards(rewardsContract).earned(address(this)); // how much CRV we can claim from the staking contract
     	uint256 mintableCvx = claimableCrv.mul(convexMintRatio).div(FEE_DENOMINATOR); // a set amount of CVX token is minted per CRV claimed
         
         uint256[] memory crvSwap = IUniswapV2Router02(crvRouter).getAmountsOut(claimableCrv, crvPath);
 		uint256 crvValue = crvSwap[2];
 		
+		uint256 cvxValue = 0;
+		
 		if (mintableCvx > 0) {
         	uint256[] memory cvxSwap = IUniswapV2Router02(cvxRouter).getAmountsOut(mintableCvx, convexTokenPath);
-			uint256 cvxValue = cvxSwap[2];		
+			cvxValue = cvxSwap[2];		
 		}
 
         return crvValue.add(cvxValue); // dollar value of our harvest 
