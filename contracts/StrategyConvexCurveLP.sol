@@ -53,20 +53,15 @@ contract StrategyConvexCurveLP is BaseStrategy {
     address[] public crvPath;
     address[] public convexTokenPath;
     
-    // all vaults will have their own separate reward contract address; none of these are verified yet
     address public depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools seem to use, aka booster
     address public rewardsContract = 0x3E03fFF82F77073cc590b656D42FceB12E4910A8; // want to add this to the constructor or at least setter since this is unique to each pool. This one is for Iron Bank pool
     uint256 public pid = 29; // this is unique to each pool
     uint256 public optimal = 0; // this is the optimal token to deposit back to our curve pool
 
-    // this controls the number of tends before we harvest
-    uint256 public tendCounter = 0;
-    uint256 public tendsPerHarvest = 0; // how many tends we call before we harvest. set to 0 to never call tends.
-    uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
-
+    // Swap stuff
     uint256 public keepCRV = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000; // with this and the above, sending 15% of our CRV yield to our voter
-
+    
     ICrvV3 public constant crv =
         ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
     IERC20 public constant convexToken =
@@ -80,15 +75,23 @@ contract StrategyConvexCurveLP is BaseStrategy {
     IERC20 public constant usdt =
         IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
 
-    uint256 public manualKeep3rHarvest = 0;
-    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards
-    bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing, typically don't need to
-
-    uint256 public USE_SUSHI = 1; // if 1, use sushiswap as our router
+    uint256 public USE_SUSHI = 1; // if 1, use sushiswap as our router for CRV or CVX sells
     address public constant sushiswapRouter =
         address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
     address public constant uniswapRouter =
         address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+        
+    // convex-specific variables
+    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards
+    bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing, typically don't need to
+    uint256 public convexMintRatio = 5000; // amount of CVX tokens minted per CRV rewards tokens, in basis points 
+
+    // Keep3r stuff
+    uint256 public manualKeep3rHarvest = 0;
+    uint256 public harvestProfitFactor; 
+    uint256 public tendCounter = 0;
+    uint256 public tendsPerHarvest = 0; // how many tends we call before we harvest. set to 0 to never call tends.
+    uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
 
 
 	// TODO FOR ORB'S VAULTS– ADD CLONING 
@@ -281,7 +284,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     
     // Sells our harvested CVX into the selected output (DAI, USDC, or USDT).
     function _sellConvex(uint256 _amount) internal {
-        IUniswapV2Router02(crvRouter).swapExactTokensForTokens(
+        IUniswapV2Router02(cvxRouter).swapExactTokensForTokens(
             _amount,
             uint256(0),
             convexTokenPath,
@@ -368,18 +371,22 @@ contract StrategyConvexCurveLP is BaseStrategy {
         // no need to spend the gas to harvest every time; tend is much cheaper
         if (tendCounter < tendsPerHarvest) return false;
         
-        // Trigger if it makes sense for the vault to send funds idle funds from the vault to the strategy. For future, non-Curve
-        // strategies, it makes more sense to make this a trigger separate from profitFactor. If I start using tend meaningfully,
-        // would perhaps make sense to add in any DAI, USDC, or USDT sitting in the strategy as well since that would be added to 
-        // the gauge as well. 
+        // Trigger if it makes sense for the vault to send funds idle funds from the vault to the strategy, or to harvest.
         uint256 profit = 0;
         if (total > params.totalDebt) profit = total.sub(params.totalDebt); // We've earned a profit!
         
         // calculate how much the call costs in dollars (converted from ETH)
         uint256 callCost = ethToDollaBill(callCostinEth);
-        
+
+        // check if it makes sense to send funds from vault to strategy
         uint256 credit = vault.creditAvailable();
         return (profitFactor.mul(callCost) < credit.add(profit));
+        
+        // calculate how much profit we'll make if we harvest
+        uint256 harvestProfit = claimableProfitInDolla();
+        
+        // check if we make enough from this to justify the harvest call
+        return (harvestProfitFactor.mul(callCost)) < harvestProfit;
     }
 
     // set what will trigger keepers to call tend, which will harvest and sell CRV for optimal asset but not deposit or report profits
@@ -417,6 +424,22 @@ contract StrategyConvexCurveLP is BaseStrategy {
         return callCostInDai[callCostInDai.length - 1];
     	}
 
+    // convert our unsold CRV and CVX into USD profit for our keep3r
+    function claimableProfitInDolla() internal view returns (uint256) {
+    	uint256 claimableCrv = IAlchemix(alchemixStaking).earned(address(this)); // how much CRV we can claim from the staking contract
+    	uint256 mintableCvx = claimableCrv.mul(convexMintRatio).div(FEE_DENOMINATOR); // a set amount of CVX token is minted per CRV claimed
+        
+        uint256[] memory crvSwap = IUniswapV2Router02(crvRouter).getAmountsOut(claimableCrv, crvPath);
+		uint256 crvValue = crvSwap[2];
+		
+		if (mintableCvx > 0) {
+        	uint256[] memory cvxSwap = IUniswapV2Router02(cvxRouter).getAmountsOut(mintableCvx, convexTokenPath);
+			uint256 cvxValue = cvxSwap[2];		
+		}
+
+        return crvValue.add(cvxValue); // dollar value of our harvest 
+    	}
+
     // set number of tends before we call our next harvest
     function setTendsPerHarvest(uint256 _tendsPerHarvest)
         external
@@ -450,6 +473,17 @@ contract StrategyConvexCurveLP is BaseStrategy {
         }
     }
     
+    // 1 is for TRUE value and 0 for FALSE to keep in sync with binary convention
+    // Use SushiSwap for CVX Router = 1;
+    // Use Uniswap for CVX Router = 0 (or anything else);
+    function setCvxRouter(uint256 _isSushiswap) external onlyAuthorized {
+        if (_isSushiswap == USE_SUSHI) {
+            cvxRouter = sushiswapRouter;
+        } else {
+            cvxRouter = uniswapRouter;
+        }
+    }
+    
     // Unless contract is borked for some reason, we should always harvest extra tokens
     function setHarvestExtras(bool _harvestExtras) external onlyAuthorized {
             harvestExtras = _harvestExtras;
@@ -458,6 +492,16 @@ contract StrategyConvexCurveLP is BaseStrategy {
     // We usually don't need to claim rewards on withdrawals, but might change our mind for migrations etc
     function setClaimRewards(bool _claimRewards) external onlyAuthorized {
             claimRewards = _claimRewards;
+    }
+    
+    // Convex has said they will update over time how many CVX gets minted per CRV claimed, so we need to be able to update this
+    function setConvexMintRatio(uint256 _amount) external onlyAuthorized {
+            convexMintRatio = _amount;
+    }
+
+	// set this to the multiple we want to make on our harvests vs the cost
+    function setharvestProfitFactor(uint256 _harvestProfitFactor) external onlyAuthorized {
+    	harvestProfitFactor = _harvestProfitFactor;
     }
 
     // Set optimal token to sell harvested CRV into for depositing back to Iron Bank Curve pool.
