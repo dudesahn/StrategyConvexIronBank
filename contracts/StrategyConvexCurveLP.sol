@@ -149,7 +149,8 @@ contract StrategyConvexCurveLP is BaseStrategy {
 
         // if we have anything staked, then harvest CRV and CVX from the rewards contract
         uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
-        if (stakedTokens > 0) {
+        uint256 claimableTokens = IConvexRewards(rewardsContract).earned(address(this));
+        if (stakedTokens > 0 && claimableTokens > 0) {
         	// if for some reason we don't want extra rewards, make sure we don't harvest them
         	IConvexRewards(rewardsContract).getReward(address(this), harvestExtras);
         	
@@ -222,7 +223,8 @@ contract StrategyConvexCurveLP is BaseStrategy {
         } else {
             // This is our tend call. If we have anything staked, then harvest CRV and CVX from the rewards contract
         	uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
-        	if (stakedTokens > 0) {
+        	uint256 claimableTokens = IConvexRewards(rewardsContract).earned(address(this));
+        	if (stakedTokens > 0 && claimableTokens > 0) {
         		// if for some reason we don't want extra rewards, make sure we don't harvest them
         		IConvexRewards(rewardsContract).getReward(address(this), harvestExtras);
         	

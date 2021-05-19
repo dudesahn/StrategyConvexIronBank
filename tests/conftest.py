@@ -104,7 +104,8 @@ def strategy(strategist, keeper, vault, StrategyConvexCurveLP, gov, curveVoterPr
     vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 5000, {"from": gov})
     vault.setManagementFee(0, {"from": gov})
     curveVoterProxyStrategy.harvest({"from": gov})
-    vault.addStrategy(strategy, 1_200, 0, 0, 1000, {"from": gov})
+    vault.addStrategy(strategy, 5000, 0, 2 ** 256 -1, 1000, {"from": gov})
+    strategy.harvest({"from": gov})
     yield strategy
 
 @pytest.fixture
