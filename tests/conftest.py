@@ -58,6 +58,11 @@ def strategist_ms(accounts):
     yield accounts.at("0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7", force=True)
 
 @pytest.fixture
+def new_address(accounts):
+    # new account for voter and proxy tests
+    yield accounts.at("0xb5DC07e23308ec663E743B1196F5a5569E4E0555", force=True)
+
+@pytest.fixture
 def keeper(accounts):
     yield accounts[0]
 
@@ -104,10 +109,10 @@ def strategy(strategist, keeper, vault, StrategyConvexCurveLP, gov, curveVoterPr
     strategy = guardian.deploy(StrategyConvexCurveLP, vault)
     strategy.setKeeper(keeper)
     # lower the debtRatio of genlender to make room for our new strategy
-    vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 5000, {"from": gov})
+    vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 9950, {"from": gov})
     vault.setManagementFee(0, {"from": gov})
     curveVoterProxyStrategy.harvest({"from": gov})
-    vault.addStrategy(strategy, 5000, 0, 2 ** 256 -1, 1000, {"from": gov})
+    vault.addStrategy(strategy, 50, 0, 2 ** 256 -1, 1000, {"from": gov})
     strategy.harvest({"from": gov})
     yield strategy
 

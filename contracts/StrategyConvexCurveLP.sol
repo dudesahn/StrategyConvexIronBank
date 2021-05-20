@@ -503,7 +503,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     }
 
 	// set this to the multiple we want to make on our harvests vs the cost
-    function setharvestProfitFactor(uint256 _harvestProfitFactor) external onlyAuthorized {
+    function setHarvestProfitFactor(uint256 _harvestProfitFactor) external onlyAuthorized {
     	harvestProfitFactor = _harvestProfitFactor;
     }
 
