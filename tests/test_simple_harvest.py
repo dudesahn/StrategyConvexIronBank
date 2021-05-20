@@ -3,7 +3,7 @@ from brownie import Contract
 from brownie import config
 
 
-def test_simple_harvest(gov, token, vault, dudesahn, strategist, whale, strategy, voter, gaugeIB, chain, strategist_ms, rewardsContract):
+def test_simple_harvest(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)
     token.approve(vault, 2 ** 256 - 1, {"from": whale})

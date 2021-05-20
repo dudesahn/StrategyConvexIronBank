@@ -219,8 +219,8 @@ contract StrategyConvexCurveLP is BaseStrategy {
         } else if (harvestNow == 1) {
             // if this is part of a harvest call, send all of our Iron Bank pool tokens to be deposited
             uint256 _toInvest = want.balanceOf(address(this));
-            //deposit into convex and stake immediately
-            IConvexDeposit(depositContract).deposit(pid, _toInvest, true);
+            //deposit into convex and stake immediately but only if we have something to invest
+            if (_toInvest > 0) IConvexDeposit(depositContract).deposit(pid, _toInvest, true);
             // since we've completed our harvest call, reset our tend counter and our harvest now
             tendCounter = 0;
             harvestNow = 0;
@@ -241,9 +241,9 @@ contract StrategyConvexCurveLP is BaseStrategy {
 
             	_sellCrv(crvRemainder);
             	_sellConvex(convexBalance);
-            	// increase our tend counter by 1 so we can know when we should harvest again
-            	uint256 previousTendCounter = tendCounter;
-            	tendCounter = previousTendCounter.add(1);
+            // increase our tend counter by 1 so we can know when we should harvest again
+            uint256 previousTendCounter = tendCounter;
+            tendCounter = previousTendCounter.add(1);
             }
         }
     }
