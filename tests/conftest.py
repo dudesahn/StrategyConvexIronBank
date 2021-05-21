@@ -23,6 +23,11 @@ def crv():
 def cvx():
     yield Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 
+# commented these lines out until the tokenized deposit contract gets verified    
+# @pytest.fixture
+# def cvxIBDeposit():
+#     yield Contract("0x30D9410ED1D5DA1F6C8391af5338C93ab8d4035C")
+
 @pytest.fixture
 def dai():
     yield Contract("0x6B175474E89094C44Da98b954EedeAC495271d0F")
@@ -113,6 +118,7 @@ def strategy(strategist, keeper, vault, StrategyConvexCurveLP, gov, curveVoterPr
     vault.setManagementFee(0, {"from": gov})
     curveVoterProxyStrategy.harvest({"from": gov})
     vault.addStrategy(strategy, 50, 0, 2 ** 256 -1, 1000, {"from": gov})
+    strategy.setStrategist('0x8Ef63b525fceF7f8662D98F77f5C9A86ae7dFE09', {"from": gov})
     strategy.harvest({"from": gov})
     yield strategy
 

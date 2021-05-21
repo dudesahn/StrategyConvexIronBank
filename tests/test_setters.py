@@ -2,7 +2,7 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-
+# test passes as of 21-05-20
 def test_setters(gov, token, vault, new_address, chain, strategy, rewardsContract):
 
     strategy.setTendsPerHarvest(5, {"from": gov})

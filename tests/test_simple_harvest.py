@@ -2,7 +2,7 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-
+# test passes as of 21-05-20
 def test_simple_harvest(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)

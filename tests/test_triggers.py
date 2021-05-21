@@ -2,7 +2,7 @@ import brownie
 from brownie import Contract
 from brownie import config
 
-
+# test passes as of 21-05-20
 def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract):
     # this is assuming tendCounter is set to 3
     ## deposit to the vault after approving

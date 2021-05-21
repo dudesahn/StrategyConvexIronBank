@@ -36,7 +36,7 @@ interface IConvexRewards {
 interface IConvexDeposit {
     //deposit into convex, receive a tokenized deposit.  parameter to stake immediately
 	function deposit(uint256 _pid, uint256 _amount, bool _stake) external returns(bool);
-    //burn a tokenized deposit to receive curve lp tokens back
+    // burn a tokenized deposit (Convex deposit tokens) to receive curve lp tokens back
 	function withdraw(uint256 _pid, uint256 _amount) external returns(bool);
 }
 
@@ -75,6 +75,8 @@ contract StrategyConvexCurveLP is BaseStrategy {
         IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
     IERC20 public constant usdt =
         IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
+    IERC20 public constant crvIBConvex =
+        IERC20(address(0x30D9410ED1D5DA1F6C8391af5338C93ab8d4035C));
 
     uint256 public USE_SUSHI = 1; // if 1, use sushiswap as our router for CRV or CVX sells
     address public constant sushiswapRouter =
@@ -294,28 +296,24 @@ contract StrategyConvexCurveLP is BaseStrategy {
         );
     }
 
-	// if we need to exit without claiming any rewards, this is probably the best way (anything with staking contract auto-triggers claiming, even if we don't get the rewards)
+	// in case we need to exit into the convex deposit token, this will allow us to do that
 	// make sure to check claimRewards before this step if needed
-    function emergencyWithdraw(uint256 _withdrawalMethod) external onlyAuthorized {
+    function emergencyWithdraw() external onlyAuthorized {
         uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
-    	if (_withdrawalMethod == 0) { // this is withdrawing without touching rewards in any shape and completely avoids the staking contract
-    		IConvexDeposit(depositContract).withdraw(pid, stakedTokens);
-    	} else if (_withdrawalMethod == 1) { // this is withdrawing and unwrapping
-    		IConvexRewards(rewardsContract).withdrawAndUnwrap(stakedTokens, claimRewards);
-    	} else { // this is withdrawing to the wrapped cvx vault token
-    		IConvexRewards(rewardsContract).withdraw(stakedTokens, claimRewards);
-    	}
+    	IConvexRewards(rewardsContract).withdraw(stakedTokens, claimRewards);
     }
-	
+
 	// migrate our want token to a new strategy if needed, make sure to check claimRewards first
     function prepareMigration(address _newStrategy) internal override {
         uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
         if (stakedTokens > 0) {
         	IConvexRewards(rewardsContract).withdrawAndUnwrap(stakedTokens, claimRewards);
         }
+        IERC20(address(crv)).safeTransfer(_newStrategy, crv.balanceOf(address(this)));
+        IERC20(address(convexToken)).safeTransfer(_newStrategy, convexToken.balanceOf(address(this)));
     }
 
-	// we don't want for these tokens to be swept out
+	// we don't want for these tokens to be swept out. We allow gov to sweep out cvx vault tokens; we would only be holding these if things were really, really rekt.
     function protectedTokens()
         internal
         view
