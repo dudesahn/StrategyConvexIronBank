@@ -10,10 +10,10 @@ def test_operation(gov, token, vault, dudesahn, strategist, whale, strategy, cha
     vault.deposit(100000e18, {"from": whale})
     newWhale = token.balanceOf(whale)
     starting_assets = vault.totalAssets()
-        
-    # tend our strategy 
+
+    # tend our strategy
     strategy.tend({"from": dudesahn})
-    
+
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
@@ -66,11 +66,11 @@ def test_operation(gov, token, vault, dudesahn, strategist, whale, strategy, cha
 
     # Display estimated APR based on the past month
     print("\nEstimated USDT APR: ", "{:.2%}".format(((new_assets_usdt - new_assets_usdc) * 365) / (strategy.estimatedTotalAssets())))
-    
+
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
-    
+
     # test to make sure our strategy is selling convex properly. send it some from our whale.
     cvx.transfer(strategy, 10000e18, {"from": convexWhale})
     strategy.harvest({"from": dudesahn})
@@ -78,12 +78,15 @@ def test_operation(gov, token, vault, dudesahn, strategist, whale, strategy, cha
     assert new_assets_from_convex_sale > new_assets_usdt
 
     # Display estimated APR based on the past day
-    print("\nEstimated CVX Donation APR: ", "{:.2%}".format(((new_assets_from_convex_sale - new_assets_usdt) * 365) / (strategy.estimatedTotalAssets())))
+    print(
+        "\nEstimated CVX Donation APR: ",
+        "{:.2%}".format(((new_assets_from_convex_sale - new_assets_usdt) * 365) / (strategy.estimatedTotalAssets())),
+    )
 
     # wait to allow share price to reach full value (takes 6 hours as of 0.3.2)
     chain.sleep(86400)
     chain.mine(1)
-    
+
     # withdraw and confirm we made money
-    vault.withdraw({"from": whale})    
-    assert token.balanceOf(whale) > startingWhale 
+    vault.withdraw({"from": whale})
+    assert token.balanceOf(whale) > startingWhale

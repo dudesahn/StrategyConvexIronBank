@@ -3,7 +3,9 @@ from brownie import Contract
 from brownie import config
 
 # test passes as of 21-05-20
-def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexCurveIronBankLP):
+def test_change_debt(
+    gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexCurveIronBankLP
+):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
@@ -18,7 +20,7 @@ def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, c
     vault.updateStrategyDebtRatio(strategy, 25, {"from": gov})
     strategy.harvest({"from": dudesahn})
 
-    assert rewardsContract.balanceOf(strategy) < ( startingLive / 1.99 )
+    assert rewardsContract.balanceOf(strategy) < (startingLive / 1.99)
 
     # set DebtRatio back to 100%
     vault.updateStrategyDebtRatio(strategy, 50, {"from": gov})
@@ -28,7 +30,7 @@ def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, c
     # wait for share price to return to normal
     chain.sleep(86400)
     chain.mine(1)
-    
+
     # withdraw and confirm we made money
-    vault.withdraw({"from": whale})    
-    assert token.balanceOf(whale) > startingWhale 
+    vault.withdraw({"from": whale})
+    assert token.balanceOf(whale) > startingWhale

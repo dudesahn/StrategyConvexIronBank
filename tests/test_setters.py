@@ -10,22 +10,22 @@ def test_setters(gov, token, vault, new_address, chain, strategy, rewardsContrac
 
     strategy.setKeep3rHarvest(1, {"from": gov})
     assert strategy.manualKeep3rHarvest() != 0
-    
+
     strategy.setKeepCRV(2000, {"from": gov})
     assert strategy.keepCRV() > 1000
 
     strategy.setCrvRouter(0, {"from": gov})
-    assert strategy.crvRouter() == '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'  
+    assert strategy.crvRouter() == "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 
     strategy.setCvxRouter(0, {"from": gov})
-    assert strategy.cvxRouter() == '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
-    
+    assert strategy.cvxRouter() == "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+
     strategy.setHarvestExtras(True, {"from": gov})
     assert strategy.harvestExtras() == True
-    
+
     strategy.setClaimRewards(True, {"from": gov})
     assert strategy.claimRewards() == True
-    
+
     strategy.setConvexMintRatio(5000, {"from": gov})
     assert strategy.convexMintRatio() == 5000
 

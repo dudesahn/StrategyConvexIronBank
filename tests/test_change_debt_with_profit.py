@@ -14,8 +14,8 @@ def test_change_debt_with_profit(gov, token, vault, dudesahn, whale, strategy):
     strategy.harvest({"from": dudesahn})
     new_params = vault.strategies(strategy).dict()
 
-    assert new_params['totalGain'] > prev_params['totalGain']
-    assert new_params['totalGain']-prev_params['totalGain'] > Wei("1_000 ether")
-    assert new_params['debtRatio'] == 25
-    assert new_params['totalLoss'] == prev_params['totalLoss']
-    assert approx(vault.totalAssets()*.025, Wei("1 ether")) == strategy.estimatedTotalAssets()
+    assert new_params["totalGain"] > prev_params["totalGain"]
+    assert new_params["totalGain"] - prev_params["totalGain"] > Wei("1_000 ether")
+    assert new_params["debtRatio"] == 25
+    assert new_params["totalLoss"] == prev_params["totalLoss"]
+    assert approx(vault.totalAssets() * 0.025, Wei("1 ether")) == strategy.estimatedTotalAssets()

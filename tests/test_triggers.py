@@ -15,45 +15,45 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
-    
+
     # harvest should trigger false
     tx = strategy.harvestTrigger(0, {"from": gov})
     print("\nShould we harvest? Should be False.", tx)
-    
+
     # simulate a month of earnings
     chain.sleep(2592000)
     chain.mine(1)
-    
+
     # harvest should trigger true
     tx = strategy.harvestTrigger(0, {"from": gov})
     print("\nShould we harvest? Should be true.", tx)
     strategy.harvest({"from": gov})
-    
+
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
-    
+
     # tend should trigger true,
     tx = strategy.tendTrigger(0, {"from": gov})
     print("\nShould we tend? Should be true", tx)
     print("\nShould be 0, tendCounter = ", strategy.tendCounter())
     strategy.tend({"from": gov})
-    
+
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
-    
+
     # tend should trigger true,
     tx = strategy.tendTrigger(0, {"from": gov})
     print("\nShould we tend? Should be true", tx)
     print("\nShould be 1, tendCounter = ", strategy.tendCounter())
     strategy.tend({"from": gov})
-    
+
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
-    
-    # tend 
+
+    # tend
     tx = strategy.tendTrigger(0, {"from": gov})
     print("\nShould we tend? Should be true", tx)
     print("\nShould be 2, tendCounter = ", strategy.tendCounter())
@@ -65,7 +65,7 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     # simulate a day of waiting for share price to bump back up
     chain.sleep(86400)
     chain.mine(1)
-    
+
     # withdraw and confirm we made money
-    vault.withdraw({"from": whale})    
-    assert token.balanceOf(whale) > startingWhale 
+    vault.withdraw({"from": whale})
+    assert token.balanceOf(whale) > startingWhale

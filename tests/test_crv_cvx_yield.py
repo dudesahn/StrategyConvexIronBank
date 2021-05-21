@@ -9,29 +9,30 @@ def test_crv_cvx_yield(gov, token, vault, dudesahn, strategist, whale, strategy,
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
     vault.deposit(100000e18, {"from": whale})
     newWhale = token.balanceOf(whale)
-    
+
     # harvest, store asset amount
     strategy.harvest({"from": gov})
-        
+
     # simulate one day of earnings
     chain.sleep(86400)
     chain.mine(1)
-    
-    strategy.harvest({"from": gov})
-    
-    cvx_holdings = cvx.balanceOf(strategy)/1e18
-    crv_holdings = crv.balanceOf(strategy)/1e18
 
-    print("\nCVX balance: ", cvx_holdings)    
+    strategy.harvest({"from": gov})
+
+    cvx_holdings = cvx.balanceOf(strategy) / 1e18
+    crv_holdings = crv.balanceOf(strategy) / 1e18
+
+    print("\nCVX balance: ", cvx_holdings)
     print("\nCRV balance: ", crv_holdings)
-    
+
+
 #     assert cvx_holdings > 0
 #     assert crv_holdings > 0
-    
-    ## comment out this section of prepareReturn before running this test
+
+## comment out this section of prepareReturn before running this test
 #                 _sellCrv(crvRemainder);
 #             _sellConvex(convexBalance);
-# 
+#
 #             if (optimal == 0) {
 #                 uint256 daiBalance = dai.balanceOf(address(this));
 #                 curve.add_liquidity([daiBalance, 0, 0], 0, true);
