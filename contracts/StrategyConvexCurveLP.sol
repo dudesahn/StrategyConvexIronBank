@@ -86,8 +86,8 @@ contract StrategyConvexCurveLP is BaseStrategy {
         address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
         
     // convex-specific variables
-    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards (generally this should be true)
-    bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing (generally this should be false)
+    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards during claimRewards (generally this should be true)
+    bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing, usually withdrawAndUnwrap (generally this should be false)
     uint256 public convexMintRatio = 5000; // amount of CVX tokens minted per CRV rewards tokens, in basis points. This changes over time (set by Convex gov) and should be monitored by strategist. 
 
     // Keep3r stuff
@@ -203,7 +203,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
 
         // debtOustanding will only be > 0 in the event of revoking or lowering debtRatio of a strategy
         if (_debtOutstanding > 0) {
-    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedTokens, _debtOutstanding), true);
+    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedTokens, _debtOutstanding), claimRewards);
 
             _debtPayment = Math.min(
                 _debtOutstanding,
@@ -220,7 +220,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
         } else if (harvestNow == 1) {
             // if this is part of a harvest call, send all of our Iron Bank pool tokens to be deposited
             uint256 _toInvest = want.balanceOf(address(this));
-            //deposit into convex and stake immediately but only if we have something to invest
+            // deposit into convex and stake immediately but only if we have something to invest
             if (_toInvest > 0) IConvexDeposit(depositContract).deposit(pid, _toInvest, true);
             // since we've completed our harvest call, reset our tend counter and our harvest now
             tendCounter = 0;
@@ -257,7 +257,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
         uint256 wantBal = want.balanceOf(address(this));
         if (_amountNeeded > wantBal) {
             uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
-    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedTokens, _amountNeeded - wantBal), true);
+    		IConvexRewards(rewardsContract).withdrawAndUnwrap(Math.min(stakedTokens, _amountNeeded - wantBal), claimRewards);
     		
             uint256 withdrawnBal = want.balanceOf(address(this));
             _liquidatedAmount = Math.min(_amountNeeded, withdrawnBal);
@@ -274,7 +274,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     }
 
     // Sells our harvested CRV into the selected output (DAI, USDC, or USDT).
-    function _sellCrv(uint256 _amount) internal {
+    function _sellCrv(uint256 _crvAmount) internal {
         IUniswapV2Router02(crvRouter).swapExactTokensForTokens(
             _amount,
             uint256(0),
@@ -285,7 +285,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     }
     
     // Sells our harvested CVX into the selected output (DAI, USDC, or USDT).
-    function _sellConvex(uint256 _amount) internal {
+    function _sellConvex(uint256 _convexAmount) internal {
         IUniswapV2Router02(cvxRouter).swapExactTokensForTokens(
             _amount,
             uint256(0),
@@ -297,12 +297,14 @@ contract StrategyConvexCurveLP is BaseStrategy {
 
 	// in case we need to exit into the convex deposit token, this will allow us to do that
 	// make sure to check claimRewards before this step if needed
-    function emergencyWithdraw() external onlyAuthorized {
+	// plan to have gov sweep tokens from strategy after this
+    function withdrawToConvexDepositTokens() external onlyAuthorized {
         uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
     	IConvexRewards(rewardsContract).withdraw(stakedTokens, claimRewards);
     }
 
 	// migrate our want token to a new strategy if needed, make sure to check claimRewards first
+	// also send over any CRV or CVX that is claimed; for migrations we definitely want to claim
     function prepareMigration(address _newStrategy) internal override {
         uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
         if (stakedTokens > 0) {
