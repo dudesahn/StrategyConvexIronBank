@@ -43,7 +43,7 @@ interface IConvexDeposit {
 
     /* ========== CONTRACT ========== */
 
-contract StrategyConvexCurveLP is BaseStrategy {
+contract StrategyConvexCurveIronBankLP is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
