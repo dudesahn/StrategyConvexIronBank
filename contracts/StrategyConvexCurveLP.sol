@@ -20,21 +20,22 @@ import {
     /* ========== INTERFACES ========== */
 
 interface IConvexRewards {
-	// staked balance
+	// strategy's staked balance in the synthetix staking contract
 	function balanceOf(address account) external view returns (uint256);
+	// read how much claimable CRV a strategy has
 	function earned(address account) external view returns (uint256);
     // stake a convex tokenized deposit
 	function stake(uint256 _amount) external returns(bool);
     // withdraw to a convex tokenized deposit, probably never need to use this
     function withdraw(uint256 _amount, bool _claim) external returns(bool);
-    // withdraw directly to curve LP token
+    // withdraw directly to curve LP token, this is what we primarily use
     function withdrawAndUnwrap(uint256 _amount, bool _claim) external returns(bool);
-    // claim rewards
+    // claim rewards, with an option to claim extra rewards or not
 	function getReward(address _account, bool _claimExtras) external returns(bool);
 }
 
 interface IConvexDeposit {
-    //deposit into convex, receive a tokenized deposit.  parameter to stake immediately
+    // deposit into convex, receive a tokenized deposit.  parameter to stake immediately (we always do this).
 	function deposit(uint256 _pid, uint256 _amount, bool _stake) external returns(bool);
     // burn a tokenized deposit (Convex deposit tokens) to receive curve lp tokens back
 	function withdraw(uint256 _pid, uint256 _amount) external returns(bool);
@@ -47,21 +48,21 @@ contract StrategyConvexCurveLP is BaseStrategy {
     using Address for address;
     using SafeMath for uint256;
 
-    ICurveFi public constant curve = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool, want to be able to set this for other strats. need this for buying more pool tokens
+    ICurveFi public constant curve = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool. need this for buying more pool tokens.
     address public crvRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CRV liquidity there
     address public cvxRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CVX liquidity there
-    address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter
-    address[] public crvPath;
-    address[] public convexTokenPath;
+    address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter, we send some extra CRV here
+    address[] public crvPath; // path to sell CRV
+    address[] public convexTokenPath; // path to sell CVX
     
-    address public depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools seem to use, aka booster
-    address public rewardsContract = 0x3E03fFF82F77073cc590b656D42FceB12E4910A8; // want to add this to the constructor or at least setter since this is unique to each pool. This one is for Iron Bank pool
+    address public depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools use, aka booster
+    address public rewardsContract = 0x3E03fFF82F77073cc590b656D42FceB12E4910A8; // This is unique to each curve pool, this one is for iron bank
     uint256 public pid = 29; // this is unique to each pool
-    uint256 public optimal = 0; // this is the optimal token to deposit back to our curve pool
+    uint256 public optimal = 0; // this is the optimal token to deposit back to our curve pool. 0 DAI, 1 USDC, 2 USDT
 
     // Swap stuff
-    uint256 public keepCRV = 1000;
-    uint256 public constant FEE_DENOMINATOR = 10000; // with this and the above, sending 15% of our CRV yield to our voter
+    uint256 public keepCRV = 1000; // the percentage of CRV we re-lock for boost (in basis points)
+    uint256 public constant FEE_DENOMINATOR = 10000; // with this and the above, sending 10% of our CRV yield to our voter
     
     ICrvV3 public constant crv =
         ICrvV3(address(0xD533a949740bb3306d119CC777fa900bA034cd52));
@@ -76,7 +77,7 @@ contract StrategyConvexCurveLP is BaseStrategy {
     IERC20 public constant usdt =
         IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
     IERC20 public constant crvIBConvex =
-        IERC20(address(0x30D9410ED1D5DA1F6C8391af5338C93ab8d4035C));
+        IERC20(address(0x30D9410ED1D5DA1F6C8391af5338C93ab8d4035C)); // this is the tokenized convex deposit token
 
     uint256 public USE_SUSHI = 1; // if 1, use sushiswap as our router for CRV or CVX sells
     address public constant sushiswapRouter =
@@ -85,25 +86,23 @@ contract StrategyConvexCurveLP is BaseStrategy {
         address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
         
     // convex-specific variables
-    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards
-    bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing, typically don't need to
-    uint256 public convexMintRatio = 5000; // amount of CVX tokens minted per CRV rewards tokens, in basis points 
+    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards (generally this should be true)
+    bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing (generally this should be false)
+    uint256 public convexMintRatio = 5000; // amount of CVX tokens minted per CRV rewards tokens, in basis points. This changes over time (set by Convex gov) and should be monitored by strategist. 
 
     // Keep3r stuff
-    uint256 public manualKeep3rHarvest = 0;
-    uint256 public harvestProfitFactor; 
-    uint256 public tendCounter = 0;
+    uint256 public manualKeep3rHarvest = 0; // this is used in case we want to manually trigger a keep3r harvest since they are cheaper than a strategist harvest
+    uint256 public harvestProfitFactor; // the multiple that our harvest profit needs to be compared to harvest cost for it to trigger
+    uint256 public tendCounter = 0; // track our tendies
     uint256 public tendsPerHarvest = 0; // how many tends we call before we harvest. set to 0 to never call tends.
-    uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest
+    uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest. this is used to differentiate tends vs harvests in adjustPosition
 
-
-	// TODO FOR ORB'S VAULTS– ADD CLONING 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
-        minReportDelay = 302400; // 3.5 days
-        maxReportDelay = 1209600; // 14 days
-        debtThreshold = 400 * 1e18; // we shouldn't ever have debt, but set a bit of a buffer
-        profitFactor = 4000; // in this strategy, profitFactor is only used for telling keep3rs when to move funds from vault to strategy
+        minReportDelay = 0;
+        maxReportDelay = 172800; // 2 days in seconds, if we hit this then harvestTrigger = True
+        debtThreshold = 1000 * 1e18; // we shouldn't ever have debt, but set a bit of a buffer
+        profitFactor = 4000; // in this strategy, profitFactor is only used for telling keep3rs when to move funds from vault to strategy (what previously was an earn call)
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
         want.safeApprove(address(depositContract), uint256(-1));

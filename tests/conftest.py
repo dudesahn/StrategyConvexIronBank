@@ -21,7 +21,7 @@ def crv():
 
 @pytest.fixture
 def cvx():
-    yield Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
+    yield Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 
 # commented these lines out until the tokenized deposit contract gets verified    
 # @pytest.fixture
@@ -101,6 +101,12 @@ def whale(accounts):
     # Totally in it for the tech (largest EOA holder of ib-3crv, ~600k worth)
     whale = accounts.at('0xE594173Aaa1493665EC6A19a0D170C76EEa1124a', force=True)
     yield whale
+
+@pytest.fixture
+def convexWhale(accounts):
+    # Totally in it for the tech (largest EOA holder of CVX, ~70k worth)
+    convexWhale = accounts.at('0x48e91eA1b2ce7FE7F39b0f606412d63855bfD674', force=True)
+    yield convexWhale
 
 # this is the live strategy for ib3crv
 @pytest.fixture
