@@ -3,7 +3,7 @@ from brownie import Contract
 from brownie import config
 
 # test passes as of 21-05-20
-def test_emergency_exit(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexCurveLP):
+def test_emergency_exit(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexCurveIronBankLP):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
@@ -28,7 +28,7 @@ def test_emergency_exit(gov, token, vault, dudesahn, strategist, whale, strategy
     vault.withdraw({"from": whale})    
     assert token.balanceOf(whale) > startingWhale 
     
-def test_emergency_withdraw_method_0(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexCurveLP):
+def test_emergency_withdraw_method_0(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexCurveIronBankLP):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
@@ -57,7 +57,7 @@ def test_emergency_withdraw_method_0(gov, token, vault, dudesahn, strategist, wh
 #     assert cvxIBDeposit.balanceOf(gov) > 0
 
 
-def test_emergency_withdraw_method_1(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexCurveLP):
+def test_emergency_withdraw_method_1(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexCurveIronBankLP):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
