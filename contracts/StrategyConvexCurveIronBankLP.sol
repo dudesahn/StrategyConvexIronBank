@@ -274,7 +274,7 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     // Sells our harvested CRV into the selected output (DAI, USDC, or USDT).
     function _sellCrv(uint256 _crvAmount) internal {
         IUniswapV2Router02(crvRouter).swapExactTokensForTokens(
-            _amount,
+            _crvAmount,
             uint256(0),
             crvPath,
             address(this),
@@ -285,7 +285,7 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     // Sells our harvested CVX into the selected output (DAI, USDC, or USDT).
     function _sellConvex(uint256 _convexAmount) internal {
         IUniswapV2Router02(cvxRouter).swapExactTokensForTokens(
-            _amount,
+            _convexAmount,
             uint256(0),
             convexTokenPath,
             address(this),
