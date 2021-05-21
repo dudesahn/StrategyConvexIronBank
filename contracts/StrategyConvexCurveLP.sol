@@ -76,8 +76,6 @@ contract StrategyConvexCurveLP is BaseStrategy {
         IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
     IERC20 public constant usdt =
         IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
-    IERC20 public constant crvIBConvex =
-        IERC20(address(0x30D9410ED1D5DA1F6C8391af5338C93ab8d4035C)); // this is the tokenized convex deposit token
 
     uint256 public USE_SUSHI = 1; // if 1, use sushiswap as our router for CRV or CVX sells
     address public constant sushiswapRouter =
