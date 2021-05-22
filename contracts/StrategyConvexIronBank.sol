@@ -99,7 +99,7 @@ contract StrategyConvexIronBank is BaseStrategy {
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
     // convex-specific variables
-    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards during claimRewards (generally this should be true)
+    bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards during getReward (generally this should be true)
     bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing, usually withdrawAndUnwrap (generally this should be false)
 
     // Keep3r stuff
