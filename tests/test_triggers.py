@@ -11,6 +11,7 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
     vault.deposit(100000e18, {"from": whale})
     newWhale = token.balanceOf(whale)
+    starting_assets = vault.totalAssets()
 
     # simulate a day of earnings
     chain.sleep(86400)
@@ -20,8 +21,8 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     tx = strategy.harvestTrigger(0, {"from": gov})
     print("\nShould we harvest? Should be False.", tx)
     
-    # simulate a month of earnings
-    chain.sleep(2592000)
+    # simulate a day of earnings
+    chain.sleep(86400)
     chain.mine(1)
     
     # harvest should trigger true

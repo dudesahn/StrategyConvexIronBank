@@ -14,7 +14,6 @@ def token():
     token_address = "0x5282a4eF67D9C33135340fB3289cc1711c13638C"
     yield Contract(token_address)
 
-
 @pytest.fixture
 def crv():
     yield Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
@@ -23,10 +22,9 @@ def crv():
 def cvx():
     yield Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 
-# commented these lines out until the tokenized deposit contract gets verified    
-# @pytest.fixture
-# def cvxIBDeposit():
-#     yield Contract("0x30D9410ED1D5DA1F6C8391af5338C93ab8d4035C")
+@pytest.fixture
+def cvxIBDeposit():
+    yield Contract("0x912EC00eaEbf3820a9B0AC7a5E15F381A1C91f22")
 
 @pytest.fixture
 def dai():
@@ -38,14 +36,8 @@ def rewardsContract():
 
 @pytest.fixture
 def voter():
-    # this is yearn's veCRV voter, where all gauge tokens are held (for v2 curve gauges that are tokenized)
+    # this is yearn's veCRV voter, where we send all CRV to vote-lock
     yield Contract("0xF147b8125d2ef93FB6965Db97D6746952a133934")
-
-
-@pytest.fixture
-def gaugeIB():
-    # this is the gauge contract for the Iron Bank Curve Pool, in Curve v2 these are tokenized.
-    yield Contract("0xF5194c3325202F456c95c1Cf0cA36f8475C1949F")
 
 # Define any accounts in this section
 @pytest.fixture
@@ -114,10 +106,10 @@ def curveVoterProxyStrategy():
     yield Contract("0x5148C3124B42e73CA4e15EEd1B304DB59E0F2AF7")
 
 @pytest.fixture
-def strategy(strategist, keeper, vault, StrategyConvexCurveIronBankLP, gov, curveVoterProxyStrategy, guardian):
+def strategy(strategist, keeper, vault, StrategyConvexIronBank, gov, curveVoterProxyStrategy, guardian):
 	# parameters for this are: strategy, vault, max deposit, minTimePerInvest, slippage protection (10000 = 100% slippage allowed), 
 	# staking pool (4 for alUSD-3Crv on masterchef), asset number (0 alUSD, 1 DAI, 2 USDC, 3 USDT)
-    strategy = guardian.deploy(StrategyConvexCurveIronBankLP, vault)
+    strategy = guardian.deploy(StrategyConvexIronBank, vault)
     strategy.setKeeper(keeper)
     # lower the debtRatio of genlender to make room for our new strategy
     vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 9950, {"from": gov})
