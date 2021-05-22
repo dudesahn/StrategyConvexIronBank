@@ -108,9 +108,8 @@ def curveVoterProxyStrategy():
 @pytest.fixture
 def strategy(strategist, keeper, vault, StrategyConvexIronBank, gov, curveVoterProxyStrategy, guardian):
 	# parameters for this are: strategy, vault, max deposit, minTimePerInvest, slippage protection (10000 = 100% slippage allowed), 
-	# staking pool (4 for alUSD-3Crv on masterchef), asset number (0 alUSD, 1 DAI, 2 USDC, 3 USDT)
     strategy = guardian.deploy(StrategyConvexIronBank, vault)
-    strategy.setKeeper(keeper)
+    strategy.setKeeper(keeper, {"from": gov})
     # lower the debtRatio of genlender to make room for our new strategy
     vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 9950, {"from": gov})
     vault.setManagementFee(0, {"from": gov})
