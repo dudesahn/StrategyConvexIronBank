@@ -455,6 +455,7 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
 
         return crvValue.add(cvxValue); // dollar value of our harvest 
     	}
+    }
 
     // set number of tends before we call our next harvest
     function setTendsPerHarvest(uint256 _tendsPerHarvest)
