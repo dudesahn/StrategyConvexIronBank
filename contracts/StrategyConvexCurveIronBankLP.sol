@@ -84,7 +84,6 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     // convex-specific variables
     bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards during claimRewards (generally this should be true)
     bool public claimRewards = false; // boolean if we should always claim rewards when withdrawing, usually withdrawAndUnwrap (generally this should be false)
-    uint256 public convexMintRatio = 5000; // amount of CVX tokens minted per CRV rewards tokens, in basis points. This changes over time (set by Convex gov) and should be monitored by strategist. 
 
     // Keep3r stuff
     uint256 public manualKeep3rHarvest; // this is used in case we want to manually trigger a keep3r harvest since they are cheaper than a strategist harvest
@@ -509,11 +508,6 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     // We usually don't need to claim rewards on withdrawals, but might change our mind for migrations etc
     function setClaimRewards(bool _claimRewards) external onlyAuthorized {
             claimRewards = _claimRewards;
-    }
-    
-    // Convex has said they will update over time how many CVX gets minted per CRV claimed, so we need to be able to update this
-    function setConvexMintRatio(uint256 _amount) external onlyAuthorized {
-            convexMintRatio = _amount;
     }
 
 	// set this to the multiple we want to make on our harvests vs the cost
