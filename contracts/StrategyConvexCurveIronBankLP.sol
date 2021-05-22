@@ -49,16 +49,16 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     using SafeMath for uint256;
 
     ICurveFi public constant curve = ICurveFi(address(0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF)); // Curve Iron Bank Pool. need this for buying more pool tokens.
-    address public crvRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CRV liquidity there
-    address public cvxRouter = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F); // default to sushiswap, more CVX liquidity there
-    address public constant voter = address(0xF147b8125d2ef93FB6965Db97D6746952a133934); // Yearn's veCRV voter, we send some extra CRV here
+    address public crvRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap, more CRV liquidity there
+    address public cvxRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F; // default to sushiswap, more CVX liquidity there
+    address public constant voter = 0xF147b8125d2ef93FB6965Db97D6746952a133934; // Yearn's veCRV voter, we send some extra CRV here
     address[] public crvPath; // path to sell CRV
     address[] public convexTokenPath; // path to sell CVX
     
     address public depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools use, aka booster
     address public rewardsContract = 0x3E03fFF82F77073cc590b656D42FceB12E4910A8; // This is unique to each curve pool, this one is for iron bank
     uint256 public pid = 29; // this is unique to each pool
-    uint256 public optimal = 0; // this is the optimal token to deposit back to our curve pool. 0 DAI, 1 USDC, 2 USDT
+    uint256 public optimal; // this is the optimal token to deposit back to our curve pool. 0 DAI, 1 USDC, 2 USDT
 
     // Swap stuff
     uint256 public keepCRV = 1000; // the percentage of CRV we re-lock for boost (in basis points)
@@ -78,10 +78,8 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
         IERC20(address(0xdAC17F958D2ee523a2206206994597C13D831ec7));
 
     uint256 public USE_SUSHI = 1; // if 1, use sushiswap as our router for CRV or CVX sells
-    address public constant sushiswapRouter =
-        address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
-    address public constant uniswapRouter =
-        address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+    address public constant sushiswapRouter = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+    address public constant uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
         
     // convex-specific variables
     bool public harvestExtras = true; // boolean to determine if we should always claim extra rewards during claimRewards (generally this should be true)
@@ -89,11 +87,11 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     uint256 public convexMintRatio = 5000; // amount of CVX tokens minted per CRV rewards tokens, in basis points. This changes over time (set by Convex gov) and should be monitored by strategist. 
 
     // Keep3r stuff
-    uint256 public manualKeep3rHarvest = 0; // this is used in case we want to manually trigger a keep3r harvest since they are cheaper than a strategist harvest
+    uint256 public manualKeep3rHarvest; // this is used in case we want to manually trigger a keep3r harvest since they are cheaper than a strategist harvest
     uint256 public harvestProfitFactor; // the multiple that our harvest profit needs to be compared to harvest cost for it to trigger
-    uint256 public tendCounter = 0; // track our tendies
-    uint256 public tendsPerHarvest = 0; // how many tends we call before we harvest. set to 0 to never call tends.
-    uint256 internal harvestNow = 0; // 0 for false, 1 for true if we are mid-harvest. this is used to differentiate tends vs harvests in adjustPosition
+    uint256 public tendCounter; // track our tendies
+    uint256 public tendsPerHarvest; // how many tends we call before we harvest. set to 0 to never call tends.
+    uint256 internal harvestNow; // 0 for false, 1 for true if we are mid-harvest. this is used to differentiate tends vs harvests in adjustPosition
 
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
@@ -103,17 +101,17 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
         profitFactor = 4000; // in this strategy, profitFactor is only used for telling keep3rs when to move funds from vault to strategy (what previously was an earn call)
 
         // want = crvIB, Curve's Iron Bank pool (ycDai+ycUsdc+ycUsdt)
-        want.safeApprove(address(depositContract), uint256(-1));
+        want.safeApprove(address(depositContract), type(uint256).max);
 
         // add approvals for crv on sushiswap and uniswap due to weird crv approval issues for setCrvRouter
         // add approvals on all tokens
-        crv.approve(uniswapRouter, uint256(-1));
-        crv.approve(sushiswapRouter, uint256(-1));
-        convexToken.approve(uniswapRouter, uint256(-1));
-        convexToken.approve(sushiswapRouter, uint256(-1));
-        dai.safeApprove(address(curve), uint256(-1));
-        usdc.safeApprove(address(curve), uint256(-1));
-        usdt.safeApprove(address(curve), uint256(-1));
+        crv.approve(uniswapRouter, type(uint256).max);
+        crv.approve(sushiswapRouter, type(uint256).max);
+        convexToken.approve(uniswapRouter, type(uint256).max);
+        convexToken.approve(sushiswapRouter, type(uint256).max);
+        dai.safeApprove(address(curve), type(uint256).max);
+        usdc.safeApprove(address(curve), type(uint256).max);
+        usdt.safeApprove(address(curve), type(uint256).max);
         
         // crv token path
         crvPath = new address[](3);
@@ -193,8 +191,7 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
         if (assets > debt) {
             _profit = want.balanceOf(address(this));
         }
-        // if assets are less than debt, we are in trouble
-        else {
+        else { // if assets are less than debt, we are in trouble
             _loss = debt.sub(assets);
             _profit = 0;
         }
@@ -215,7 +212,9 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         if (emergencyExit) {
             return;
-        } else if (harvestNow == 1) {
+        }
+        
+        if (harvestNow == 1) {
             // if this is part of a harvest call, send all of our Iron Bank pool tokens to be deposited
             uint256 _toInvest = want.balanceOf(address(this));
             // deposit into convex and stake immediately but only if we have something to invest
@@ -267,8 +266,6 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
                 _loss = debt.sub(assets);
             }
         }
-
-        return (_liquidatedAmount, _loss);
     }
 
     // Sells our harvested CRV into the selected output (DAI, USDC, or USDT).
@@ -425,8 +422,8 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     // convert our unsold CRV and CVX into USD profit for our keep3r
     function claimableProfitInDolla() internal view returns (uint256) {
     	uint256 claimableCrv = IConvexRewards(rewardsContract).earned(address(this)); // how much CRV we can claim from the staking contract
-    	uint256 mintableCvx = claimableCrv.mul(convexMintRatio).div(FEE_DENOMINATOR); // a set amount of CVX token is minted per CRV claimed
-        
+    	uint256 mintableCvx = claimableCrv.mul((1000.sub((convexToken.totalSupply().div(100000000000000000000000)))).div(1000));
+    	        
         uint256[] memory crvSwap = IUniswapV2Router02(crvRouter).getAmountsOut(claimableCrv, crvPath);
 		uint256 crvValue = crvSwap[2];
 		
