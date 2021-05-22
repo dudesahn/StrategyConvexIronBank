@@ -72,7 +72,7 @@ def test_operation(gov, token, vault, dudesahn, strategist, whale, strategy, cha
     chain.mine(1)
     
     # test to make sure our strategy is selling convex properly. send it some from our whale.
-    cvx.transfer(strategy, 10000e18, {"from": convexWhale})
+    cvx.transfer(strategy, 1000e18, {"from": convexWhale})
     strategy.harvest({"from": dudesahn})
     new_assets_from_convex_sale = vault.totalAssets()
     assert new_assets_from_convex_sale > new_assets_usdt

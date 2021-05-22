@@ -25,9 +25,6 @@ def test_setters(gov, token, vault, new_address, chain, strategy, rewardsContrac
     
     strategy.setClaimRewards(True, {"from": gov})
     assert strategy.claimRewards() == True
-    
-    strategy.setConvexMintRatio(5000, {"from": gov})
-    assert strategy.convexMintRatio() == 5000
 
     strategy.setHarvestProfitFactor(4000, {"from": gov})
     assert strategy.harvestProfitFactor() == 4000
