@@ -422,7 +422,26 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     // convert our unsold CRV and CVX into USD profit for our keep3r
     function claimableProfitInDolla() internal view returns (uint256) {
     	uint256 claimableCrv = IConvexRewards(rewardsContract).earned(address(this)); // how much CRV we can claim from the staking contract
-    	uint256 mintableCvx = claimableCrv.mul((1000).sub((convexToken.totalSupply().div(100000000000000000000000)))).div(1000));
+    	
+    	// calculations pulled directly from CVX's contract for minting CVX per CRV claimed
+    	uint256 totalCliffs = 1000;    
+    	uint256 maxSupply = 100 * 1000000 * 1e18; // 100mil
+    	uint256 reductionPerCliff = 100000000000000000000000; // 100,000
+    	uint256 supply = convexToken.totalSupply();
+
+        uint256 cliff = supply.div(reductionPerCliff);
+        //mint if below total cliffs
+        if(cliff < totalCliffs){
+            //for reduction% take inverse of current cliff
+            uint256 reduction = totalCliffs.sub(cliff);
+            //reduce
+            uint256 mintableCvx = claimableCrv.mul(reduction).div(totalCliffs);
+
+            //supply cap check
+            uint256 amtTillMax = maxSupply.sub(supply);
+            if(mintableCvx > amtTillMax){
+                mintableCvx = amtTillMax;
+            }
     	        
         uint256[] memory crvSwap = IUniswapV2Router02(crvRouter).getAmountsOut(claimableCrv, crvPath);
 		uint256 crvValue = crvSwap[2];
