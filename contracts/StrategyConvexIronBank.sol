@@ -233,8 +233,6 @@ contract StrategyConvexIronBank is BaseStrategy {
                 want.balanceOf(address(this))
             );
         }
-
-        return (_profit, _loss, _debtPayment);
     }
 
     function adjustPosition(uint256 _debtOutstanding) internal override {
