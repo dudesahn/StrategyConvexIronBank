@@ -43,7 +43,7 @@ interface IConvexDeposit {
 
     /* ========== CONTRACT ========== */
 
-contract StrategyConvexCurveIronBankLP is BaseStrategy {
+contract StrategyConvexIronBank is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
@@ -104,10 +104,10 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
 
         // add approvals for crv on sushiswap and uniswap due to weird crv approval issues for setCrvRouter
         // add approvals on all tokens
-        crv.approve(uniswapRouter, type(uint256).max);
-        crv.approve(sushiswapRouter, type(uint256).max);
-        convexToken.approve(uniswapRouter, type(uint256).max);
-        convexToken.approve(sushiswapRouter, type(uint256).max);
+        crv.safeApprove(uniswapRouter, type(uint256).max);
+        crv.safeApprove(sushiswapRouter, type(uint256).max);
+        convexToken.safeApprove(uniswapRouter, type(uint256).max);
+        convexToken.safeApprove(sushiswapRouter, type(uint256).max);
         dai.safeApprove(address(curve), type(uint256).max);
         usdc.safeApprove(address(curve), type(uint256).max);
         usdt.safeApprove(address(curve), type(uint256).max);
@@ -126,7 +126,7 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
     }
 
     function name() external view override returns (string memory) {
-        return "StrategyConvexCurveIronBankLP";
+        return "StrategyConvexIronBank";
     }
 
     // total assets held by strategy. loose funds in strategy and all staked funds
@@ -151,6 +151,7 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
         uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
         uint256 claimableTokens = IConvexRewards(rewardsContract).earned(address(this));
         if (stakedTokens > 0 && claimableTokens > 0) {
+        	// this claims our CRV, CVX, and any extra tokens like SNX or ANKR
         	// if for some reason we don't want extra rewards, make sure we don't harvest them
         	IConvexRewards(rewardsContract).getReward(address(this), harvestExtras);
         	
@@ -291,7 +292,7 @@ contract StrategyConvexCurveIronBankLP is BaseStrategy {
 
 	// in case we need to exit into the convex deposit token, this will allow us to do that
 	// make sure to check claimRewards before this step if needed
-	// plan to have gov sweep tokens from strategy after this
+	// plan to have gov sweep convex deposit tokens from strategy after this
     function withdrawToConvexDepositTokens() external onlyAuthorized {
         uint256 stakedTokens = IConvexRewards(rewardsContract).balanceOf(address(this));
     	IConvexRewards(rewardsContract).withdraw(stakedTokens, claimRewards);
