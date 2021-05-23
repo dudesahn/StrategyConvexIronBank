@@ -3,7 +3,7 @@ from brownie import Wei
 from pytest import approx
 
 
-def test_change_debt_with_profit(gov, token, vault, dudesahn, whale, strategy):
+def test_change_debt_with_profit(gov, token, vault, dudesahn, whale, strategy, strat_setup):
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
     vault.deposit(100000e18, {"from": whale})
     strategy.harvest({"from": dudesahn})
