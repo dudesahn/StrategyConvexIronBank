@@ -498,27 +498,26 @@ contract StrategyConvexIronBank is BaseStrategy {
             if (mintableCvx > amtTillMax) {
                 mintableCvx = amtTillMax;
             }
-
-            uint256[] memory crvSwap =
-                IUniswapV2Router02(crvRouter).getAmountsOut(
-                    claimableCrv,
-                    crvPath
-                );
-            uint256 crvValue = crvSwap[2];
-
-            uint256 cvxValue = 0;
-
-            if (mintableCvx > 0) {
-                uint256[] memory cvxSwap =
-                    IUniswapV2Router02(cvxRouter).getAmountsOut(
-                        mintableCvx,
-                        convexTokenPath
-                    );
-                cvxValue = cvxSwap[2];
-            }
-
-            return crvValue.add(cvxValue); // dollar value of our harvest
         }
+
+        uint256[] memory crvSwap =
+            IUniswapV2Router02(crvRouter).getAmountsOut(
+                claimableCrv,
+                crvPath
+            );
+        uint256 crvValue = crvSwap[2];
+
+        uint256 cvxValue = 0;
+
+        if (mintableCvx > 0) {
+            uint256[] memory cvxSwap =
+                IUniswapV2Router02(cvxRouter).getAmountsOut(
+                    mintableCvx,
+                    convexTokenPath
+                );
+            cvxValue = cvxSwap[2];
+            }
+        return crvValue.add(cvxValue); // dollar value of our harvest
     }
 
     // set number of tends before we call our next harvest
