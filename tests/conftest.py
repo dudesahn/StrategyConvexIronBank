@@ -47,7 +47,7 @@ def gov(accounts):
 
 @pytest.fixture
 def dudesahn(accounts):
-    yield accounts.at("0x8Ef63b525fceF7f8662D98F77f5C9A86ae7dFE09", force=True)
+    yield accounts.at("0xBedf3Cf16ba1FcE6c3B751903Cf77E51d51E05b8", force=True)
 
 @pytest.fixture
 def strategist_ms(accounts):
@@ -81,7 +81,7 @@ def management(accounts):
 
 @pytest.fixture
 def strategist(accounts):
-    yield accounts[4]
+    yield accounts.at("0xBedf3Cf16ba1FcE6c3B751903Cf77E51d51E05b8", force=True)
 
 @pytest.fixture
 def strategist_ms(accounts):
@@ -100,24 +100,39 @@ def convexWhale(accounts):
     convexWhale = accounts.at('0x48e91eA1b2ce7FE7F39b0f606412d63855bfD674', force=True)
     yield convexWhale
 
-# this is the live strategy for ib3crv
+# this is the live strategy for ib3crv curve
 @pytest.fixture
 def curveVoterProxyStrategy():
     yield Contract("0x5148C3124B42e73CA4e15EEd1B304DB59E0F2AF7")
 
+# this is the live strategy for ib3crv convex
 @pytest.fixture
-def strategy(strategist, keeper, vault, StrategyConvexIronBank, gov, curveVoterProxyStrategy, guardian):
-	# parameters for this are: strategy, vault, max deposit, minTimePerInvest, slippage protection (10000 = 100% slippage allowed), 
-    strategy = guardian.deploy(StrategyConvexIronBank, vault)
-    strategy.setKeeper(keeper, {"from": gov})
-    # lower the debtRatio of genlender to make room for our new strategy
-    vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 9950, {"from": gov})
+def strategy():
+    yield Contract("0x864F408B422B7d33416AC678b1a1A7E6fbcF5C8c")
+
+@pytest.fixture
+def strat_setup(strategy, strategist, keeper, vault, StrategyConvexIronBank, gov, curveVoterProxyStrategy, guardian):
+    vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 9900, {"from": gov})
     vault.setManagementFee(0, {"from": gov})
-    curveVoterProxyStrategy.harvest({"from": gov})
     vault.addStrategy(strategy, 50, 0, 2 ** 256 -1, 1000, {"from": gov})
-    strategy.setStrategist('0x8Ef63b525fceF7f8662D98F77f5C9A86ae7dFE09', {"from": gov})
     strategy.harvest({"from": gov})
-    yield strategy
+    curveVoterProxyStrategy.harvest({"from": gov})
+    yield strat_setup
+
+
+# @pytest.fixture
+# def strategy(strategist, keeper, vault, StrategyConvexIronBank, gov, curveVoterProxyStrategy, guardian):
+# 	# parameters for this are: strategy, vault, max deposit, minTimePerInvest, slippage protection (10000 = 100% slippage allowed), 
+#     strategy = guardian.deploy(StrategyConvexIronBank, vault)
+#     strategy.setKeeper(keeper, {"from": gov})
+#     # lower the debtRatio of genlender to make room for our new strategy
+#     vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 9950, {"from": gov})
+#     vault.setManagementFee(0, {"from": gov})
+#     curveVoterProxyStrategy.harvest({"from": gov})
+#     vault.addStrategy(strategy, 50, 0, 2 ** 256 -1, 1000, {"from": gov})
+#     strategy.setStrategist('0x8Ef63b525fceF7f8662D98F77f5C9A86ae7dFE09', {"from": gov})
+#     strategy.harvest({"from": gov})
+#     yield strategy
 
 @pytest.fixture
 def vault(pm):

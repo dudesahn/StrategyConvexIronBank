@@ -7,10 +7,11 @@ from brownie import config
 #       Show that nothing is lost!
 
 # test passes as of 21-05-20
-def test_migration(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexIronBank):
+def test_migration(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, curveVoterProxyStrategy, StrategyConvexIronBank, strat_setup):
     # deploy our new strategy
     new_strategy = dudesahn.deploy(StrategyConvexIronBank, vault)
     total_old = strategy.estimatedTotalAssets()
+    total_old_proxy = curveVoterProxyStrategy.estimatedTotalAssets()
 
     # migrate our old strategy
     vault.migrateStrategy(strategy, new_strategy, {"from": gov})
@@ -22,7 +23,9 @@ def test_migration(gov, token, vault, dudesahn, strategist, whale, strategy, cha
     # harvest to get funds back in strategy
     new_strategy.harvest({"from": dudesahn})
     new_strat_balance = new_strategy.estimatedTotalAssets()
-    assert new_strat_balance == total_old
+    total_new_proxy = curveVoterProxyStrategy.estimatedTotalAssets()
+    assert total_new_proxy == total_old_proxy
+    assert new_strat_balance >= total_old
     
     startingVault = vault.totalAssets()
     print("\nVault starting assets with new strategy: ", startingVault)
