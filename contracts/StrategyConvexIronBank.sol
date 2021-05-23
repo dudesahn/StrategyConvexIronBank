@@ -188,7 +188,7 @@ contract StrategyConvexIronBank is BaseStrategy {
             uint256 crvRemainder = crvBalance.sub(_keepCRV);
 
             _sellCrv(crvRemainder);
-            if (convexBalance > 0) (_sellConvex(convexBalance);
+            if (convexBalance > 0) _sellConvex(convexBalance);
 
             if (optimal == 0) {
                 uint256 daiBalance = dai.balanceOf(address(this));
@@ -270,7 +270,7 @@ contract StrategyConvexIronBank is BaseStrategy {
                 uint256 crvRemainder = crvBalance.sub(_keepCRV);
 
                 _sellCrv(crvRemainder);
-                if (convexBalance > 0) (_sellConvex(convexBalance);
+                if (convexBalance > 0) _sellConvex(convexBalance);
                 // increase our tend counter by 1 so we can know when we should harvest again
                 uint256 previousTendCounter = tendCounter;
                 tendCounter = previousTendCounter.add(1);

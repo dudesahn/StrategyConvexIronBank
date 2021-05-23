@@ -112,9 +112,7 @@ def strategy():
 
 @pytest.fixture
 def strat_setup(strategy, strategist, keeper, vault, StrategyConvexIronBank, gov, curveVoterProxyStrategy, guardian):
-    vault.updateStrategyDebtRatio(curveVoterProxyStrategy, 9900, {"from": gov})
     vault.setManagementFee(0, {"from": gov})
-    vault.addStrategy(strategy, 50, 0, 2 ** 256 -1, 1000, {"from": gov})
     strategy.harvest({"from": gov})
     curveVoterProxyStrategy.harvest({"from": gov})
     yield strat_setup
