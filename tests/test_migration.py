@@ -7,7 +7,7 @@ from brownie import config
 #       Show that nothing is lost!
 
 # test passes as of 21-05-20
-def test_migration(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, curveVoterProxyStrategy, StrategyConvexIronBank, strat_setup):
+def test_migration(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, curveVoterProxyStrategy, StrategyConvexIronBank):
     # deploy our new strategy
     new_strategy = dudesahn.deploy(StrategyConvexIronBank, vault)
     total_old = strategy.estimatedTotalAssets()
@@ -38,7 +38,8 @@ def test_migration(gov, token, vault, dudesahn, strategist, whale, strategy, cha
     new_strategy.tend({"from": dudesahn})
     assert new_strategy.tendCounter() == 1
     
-    # simulate a day of earnings
+    # simulate a day of waiting for share price to bump back up
+    curveVoterProxyStrategy.harvest({"from": gov})
     chain.sleep(86400)
     chain.mine(1)
     

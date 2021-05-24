@@ -3,7 +3,7 @@ from brownie import Contract
 from brownie import config
 
 # test passes as of 21-05-20
-def test_revoke_strategy_from_vault(gov, token, vault, whale, chain, strategy):
+def test_revoke_strategy_from_vault(gov, token, vault, whale, chain, strategy, curveVoterProxyStrategy):
     vaultAssets_starting = vault.totalAssets()
     vault_holdings_starting = token.balanceOf(vault)
     strategy_starting = strategy.estimatedTotalAssets()
@@ -14,7 +14,8 @@ def test_revoke_strategy_from_vault(gov, token, vault, whale, chain, strategy):
     assert strategy.estimatedTotalAssets() == 0
     assert token.balanceOf(vault) >= vault_holdings_starting + strategy_starting
     
-    # wait to allow share price to reach full value (takes 6 hours as of 0.3.2)
+    # simulate a day of waiting for share price to bump back up
+    curveVoterProxyStrategy.harvest({"from": gov})
     chain.sleep(86400)
     chain.mine(1)
 

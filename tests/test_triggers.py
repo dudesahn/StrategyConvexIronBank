@@ -3,7 +3,7 @@ from brownie import Contract
 from brownie import config
 
 # test passes as of 21-05-20
-def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract):
+def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, curveVoterProxyStrategy):
     # this is assuming tendCounter is set to 3, this will test our harvest/tend system
     ## deposit to the vault after approving
     strategy.setTendsPerHarvest(3, {"from": gov})
@@ -89,6 +89,7 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     assert tx == False
 
     # simulate a day of waiting for share price to bump back up
+    curveVoterProxyStrategy.harvest({"from": gov})
     chain.sleep(86400)
     chain.mine(1)
 

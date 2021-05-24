@@ -3,7 +3,7 @@ from brownie import Contract
 from brownie import config
 
 # test passes as of 21-05-20
-def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexIronBank, strat_setup):
+def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, StrategyConvexIronBank, curveVoterProxyStrategy):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
@@ -15,17 +15,18 @@ def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, c
     startingLive = rewardsContract.balanceOf(strategy)
 
     # debtRatio is in BPS (aka, max is 10,000, which represents 100%), and is a fraction of the funds that can be in the strategy
-    vault.updateStrategyDebtRatio(strategy, 2, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy, 150, {"from": gov})
     strategy.harvest({"from": dudesahn})
 
     assert rewardsContract.balanceOf(strategy) < ( startingLive / 1.99 )
 
     # set DebtRatio back to 100%
-    vault.updateStrategyDebtRatio(strategy, 5, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy, 300, {"from": gov})
     strategy.harvest({"from": dudesahn})
     assert rewardsContract.balanceOf(strategy) >= startingLive
 
-    # wait for share price to return to normal
+    # simulate a day of waiting for share price to bump back up
+    curveVoterProxyStrategy.harvest({"from": gov})
     chain.sleep(86400)
     chain.mine(1)
     
