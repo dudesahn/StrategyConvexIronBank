@@ -76,6 +76,8 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     
     # this will test pure harvest cost checking. if it's extremely cheap to harvest we should, if it's very expensive then we shouldn't
     # harvest should trigger true
+    # set our harvestProfitFactor, at this rate gov spends 1/10 of a harvest profit on the call
+    strategy.setHarvestProfitFactor(100, {"from": gov})
     strategy.harvest({"from": gov})    
     strategy.setTendsPerHarvest(0, {"from": gov})
     tx = strategy.harvestTrigger(1, {"from": gov})
@@ -83,7 +85,7 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     assert tx == True
 
     # harvest should trigger false
-    tx = strategy.harvestTrigger(1000000000000000000000, {"from": gov})
+    tx = strategy.harvestTrigger(100e18, {"from": gov})
     print("\nShould we harvest? Should be false.", tx)
     strategy.harvest({"from": gov})    
     assert tx == False

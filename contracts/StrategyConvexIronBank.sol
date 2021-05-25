@@ -425,7 +425,7 @@ contract StrategyConvexIronBank is BaseStrategy {
 
         // check if it makes sense to send funds from vault to strategy
         uint256 credit = vault.creditAvailable();
-        return (profitFactor.mul(callCost) < credit.add(profit));
+        if (profitFactor.mul(callCost) < credit.add(profit)) return true;
 
         // calculate how much profit we'll make if we harvest
         uint256 harvestProfit = claimableProfitInDolla();
@@ -484,7 +484,7 @@ contract StrategyConvexIronBank is BaseStrategy {
         uint256 maxSupply = 100 * 1000000 * 1e18; // 100mil
         uint256 reductionPerCliff = 100000000000000000000000; // 100,000
         uint256 supply = convexToken.totalSupply();
-        uint256 mintableCvx = 0;
+        uint256 mintableCvx;
 
         uint256 cliff = supply.div(reductionPerCliff);
         //mint if below total cliffs
@@ -501,15 +501,14 @@ contract StrategyConvexIronBank is BaseStrategy {
             }
         }
 
-        uint256[] memory crvSwap =
-            IUniswapV2Router02(crvRouter).getAmountsOut(
-                claimableCrv,
-                crvPath
-            );
-        uint256 crvValue = crvSwap[2];
+        uint256 crvValue;
+        if (claimableCrv > 0) {
+        	uint256[] memory crvSwap =
+            	IUniswapV2Router02(crvRouter).getAmountsOut(claimableCrv, crvPath);
+        	crvValue = crvSwap[2];
+        }
 
-        uint256 cvxValue = 0;
-
+        uint256 cvxValue;
         if (mintableCvx > 0) {
             uint256[] memory cvxSwap =
                 IUniswapV2Router02(cvxRouter).getAmountsOut(

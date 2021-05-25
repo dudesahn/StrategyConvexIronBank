@@ -15,13 +15,14 @@ def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, c
     startingLive = rewardsContract.balanceOf(strategy)
 
     # debtRatio is in BPS (aka, max is 10,000, which represents 100%), and is a fraction of the funds that can be in the strategy
-    vault.updateStrategyDebtRatio(strategy, 150, {"from": gov})
+    currentDebt = vault.strategies(strategy)[2]
+    vault.updateStrategyDebtRatio(strategy, currentDebt/2, {"from": gov})
     strategy.harvest({"from": dudesahn})
 
-    assert rewardsContract.balanceOf(strategy) < ( startingLive / 1.99 )
+    assert rewardsContract.balanceOf(strategy) < (startingLive)
 
     # set DebtRatio back to 100%
-    vault.updateStrategyDebtRatio(strategy, 300, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy, currentDebt, {"from": gov})
     strategy.harvest({"from": dudesahn})
     assert rewardsContract.balanceOf(strategy) >= startingLive
 
