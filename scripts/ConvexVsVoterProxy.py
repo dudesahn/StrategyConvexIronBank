@@ -35,13 +35,13 @@ keepCrv = 0.1
 convexFee = 0.16
 convexKeepCrv = 0.12
 
+# add whatever other vaults you want here
 # ib, most recent check: send to convex 106,954,685.88 IB pool tokens, target debtRatios of 6560 (convex) and 3423
-# at 0.15 keepCRV,
-# lpToken = Contract.from_explorer("0x5282a4eF67D9C33135340fB3289cc1711c13638C")
-# poolId = 29
-# strategy = Contract("0x864F408B422B7d33416AC678b1a1A7E6fbcF5C8c")
-# # set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
-# underlyingPrice = prices[0]
+lpToken = Contract.from_explorer("0x5282a4eF67D9C33135340fB3289cc1711c13638C")
+poolId = 29
+strategy = Contract("0x864F408B422B7d33416AC678b1a1A7E6fbcF5C8c")
+# set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
+underlyingPrice = prices[0]
 
 # sETH, most recent check: send to convex 21,404.45 ETH pool tokens, target debtRatios of 5432 (convex) and 4545
 # lpToken = Contract.from_explorer("0xA3D87FffcE63B53E0d54fAa1cc983B7eB0b74A9c")
