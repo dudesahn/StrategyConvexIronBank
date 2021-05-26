@@ -129,6 +129,8 @@ periods = 365
 # first remove Convex's fees, then apply this APR to both our CRV amount (1 - convexKeepCrv) and our cvx displayed as CRV balance
 finalConvexApr = (((1 - convexFee) * currentConvexBoost * baseApr) * ((1 - convexKeepCrv) + cvx_printed_as_crv))
 finalConvexApy = ((1+ (finalConvexApr / periods)) ** periods) - 1
+convexCrvOnlyApr = ((1 - convexFee) * currentConvexBoost * baseApr) * ((1 - convexKeepCrv))
+convexCrvOnlyApy = ((1+ (convexCrvOnlyApr / periods)) ** periods) - 1
 
 # calculate our final yield on Yearn
 finalYearnApr =  currentYearnBoost * baseApr * (1 - keepCrv)
@@ -157,5 +159,5 @@ curveDebtRatio = (1 - convexDebtRatio/10000) * 9950
 # APY at optimal allocation
 # calculate this later
 
-print("Final Yearn CRV APY:", "{:.2%}".format(finalYearnApy), "\nFinal Convex CRV+CVX APY:", "{:.2%}".format(finalConvexApy), "\nRatio of Yearn to Convex veCRV, 1 :", "{:.2}".format(veCRV_ratio_for_printing), "\nTarget Ratio of Yearn to Convex funds, 1 :", "{:.2}".format(targetRatio_for_printing), "\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveDebtRatio))
+print("Final Yearn CRV APY:", "{:.2%}".format(finalYearnApy),  "\nFinal Convex CRV-Only APY:", "{:.2%}".format(convexCrvOnlyApy), "\nFinal Convex CRV+CVX APY:", "{:.2%}".format(finalConvexApy), "\nRatio of Yearn to Convex veCRV, 1 :", "{:.2}".format(veCRV_ratio_for_printing), "\nTarget Ratio of Yearn to Convex funds, 1 :", "{:.2}".format(targetRatio_for_printing), "\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveDebtRatio))
 quit()
