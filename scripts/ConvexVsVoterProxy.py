@@ -98,16 +98,14 @@ convexGaugeBalance = gauge.balanceOf(convex_voter)
 baseApr = (gaugeInflationRate) * (gaugeRelativeWeight) * (SecondsInYear/(gaugeWorkingSupply)) * (InverseMaxBoost/(poolVirtualPrice)) * (priceOfCrv) / (underlyingPrice)
 
 # calculate our boosted values
-# yearn. if this divides by 0, then we don't have anything in that gauge
+# yearn. if this divides by 0, then we don't have anything in that gauge and this will error.
 currentYearnBoost = yearnWorkingBalance / ( InverseMaxBoost * yearnGaugeBalance ) * (yearnGaugeBalance / yearnGaugeBalance)
 
-# convex. if this divides by 0, then we don't have anything in that gauge. Convex currently charges 16% in fees on CRV yield
+# convex. if this divides by 0, then we don't have anything in that gauge and this will error.
 # Convex doesn't take fees out of reward tokens, so we can ignore these in our comparison, same for base pool APY
 currentConvexBoost = convexWorkingBalance / (InverseMaxBoost * convexGaugeBalance) * (convexGaugeBalance/convexGaugeBalance)
 
-# perhaps ultimately what we want to calculate is the ratio of their veCRV to ours, allocating our liquidity in that manner (so pools are that size)
-# should at least target the optimal yield; but then we want to give them more because of their CVX printing
-
+# this is how convex calculates how much CVX they mint per CRV farmed in their CVX contract
 # convex minted per CRV
 totalCliffs = 1000
 maxSupply = 100 * 1000000 * 1e18
@@ -128,7 +126,8 @@ cvx_printed_as_crv = cvxMintedPerCrv * converted_cvx
 
 # Calculate our final yield on Convex
 periods = 365
-finalConvexApr = (((1 - convexFee) * (1 - convexKeepCrv)*currentConvexBoost*baseApr) * (1 + cvx_printed_as_crv)
+# first remove Convex's fees, then apply this APR to both our CRV amount (1 - convexKeepCrv) and our cvx displayed as CRV balance
+finalConvexApr = (((1 - convexFee) * currentConvexBoost * baseApr) * ((1 - convexKeepCrv) + cvx_printed_as_crv))
 finalConvexApy = ((1+ (finalConvexApr / periods)) ** periods) - 1
 
 # calculate our final yield on Yearn
