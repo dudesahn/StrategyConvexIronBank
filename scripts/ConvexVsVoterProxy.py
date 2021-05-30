@@ -201,7 +201,7 @@ rewards = Contract(targetRewards)
 depositedInConvex = rewards.balanceOf(convexStrategy)
 
 convexTargetDebtRatio = (depositedInConvex + sendToConvex*1e18) / (yearnGaugeBalance + depositedInConvex) * 10000
-curveTargetDebtRatio = (1 - convexDebtRatio/10000) * 10000
+curveTargetDebtRatio = (1 - convexTargetDebtRatio/10000) * 10000
 
 print("Final Yearn Gross Farmed APY:", "{:.2%}".format(grossFarmedYearnApy),  "\nFinal Convex CRV-Only APY:", "{:.2%}".format(convexCrvOnlyApy), "\nFinal Convex Gross Farmed APY:", "{:.2%}".format(grossFarmedConvexApy),  "\nFinal Overall Gross (With Pool Yield) APY:", "{:.2%}".format(totalApy), "\nFinal Overall Net APY:", "{:.2%}".format(totalNetApy), "\nRatio of Yearn to Convex veCRV, 1 :", "{:.2}".format(veCRV_ratio_for_printing), "\nTarget Ratio of Yearn to Convex funds, 1 :", "{:.2}".format(targetRatio_for_printing), "\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexTargetDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveTargetDebtRatio))
 quit()
