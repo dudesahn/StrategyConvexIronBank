@@ -37,7 +37,6 @@ lockIncentive = booster.lockIncentive()
 stakerIncentive = booster.stakerIncentive()
 earmarkIncentive = booster.earmarkIncentive()
 convexFee = (lockIncentive + stakerIncentive + earmarkIncentive)/10000
-### If there aren't any rewards tokens, make sure to go below and hard-code rewardsApr to 0
 
 # add whatever other vaults you want here
 # ib, most recent check: send to convex 106,954,685.88 IB pool tokens, target debtRatios of 6981 (convex) and 3019
@@ -45,6 +44,8 @@ convexFee = (lockIncentive + stakerIncentive + earmarkIncentive)/10000
 # poolId = 29
 # poolApy = 0.06
 # vault = Contract("0x27b7b1ad7288079A66d12350c828D3C00A6F07d7")
+# # set this to true if this pool has extra rewards like snx, ldo, etc
+# hasRewards = False
 # # set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
 # underlyingPrice = prices[0]
 
@@ -53,6 +54,8 @@ lpToken = Contract.from_explorer("0xA3D87FffcE63B53E0d54fAa1cc983B7eB0b74A9c")
 poolId = 23
 poolApy = 0.0035
 vault = Contract("0x986b4AFF588a109c09B50A03f42E4110E29D353F")
+# set this to true if this pool has extra rewards like snx, ldo, etc
+hasRewards = False
 # set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
 underlyingPrice = prices[1]
 
@@ -61,6 +64,8 @@ underlyingPrice = prices[1]
 # poolId = 25
 # poolApy = 0.033
 # vault = Contract("0xdCD90C7f6324cfa40d7169ef80b12031770B4325")
+# # set this to true if this pool has extra rewards like snx, ldo, etc
+# hasRewards = True
 # # set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
 # underlyingPrice = prices[1]
 
@@ -108,7 +113,7 @@ baseApr = (gaugeInflationRate) * (gaugeRelativeWeight) * (SecondsInYear/(gaugeWo
 ## -------------------------------------------------------------- ##
 # calculate our boosted values
 # yearn. if this divides by 0, then we don't have anything in that gauge and this will error.
-currentYearnBoost = yearnWorkingBalance / ( InverseMaxBoost * yearnGaugeBalance ) * (yearnGaugeBalance / yearnGaugeBalance)
+currentYearnBoost = yearnWorkingBalance / (InverseMaxBoost * yearnGaugeBalance) * (yearnGaugeBalance / yearnGaugeBalance)
 
 # convex. if this divides by 0, then we don't have anything in that gauge and this will error.
 # Convex doesn't take fees out of reward tokens, so we can ignore these in our comparison, same for base pool APY
@@ -141,19 +146,23 @@ compoundingEvents = 365
 totalPerformanceFee = 0.2
 managementFee = 0.02
 
-# extra curve rewards calcs
-_stakingRewards = gauge.reward_contract()
-stakingRewards = Contract(_stakingRewards)
-stakingRewardsRate = stakingRewards.rewardRate()
-stakingRewardsTotalSupply = stakingRewards.totalSupply()
 
-# price of reward asset
-rewardAsset = gauge.reward_tokens(0)
-rewardPath = [rewardAsset, weth, usdc]
-priceOfRewardAsset = sushiswapRouter.getAmountsOut(oneCoin, rewardPath)[2]/1e6
-rewardsApr = SecondsInYear * (stakingRewardsRate / 1e18) * (priceOfRewardAsset) / (((poolVirtualPrice / 1e18 ) * stakingRewardsTotalSupply / (1e18)) * (underlyingPrice))
-# hardcode this to zero if none present
-rewardsApr = 0
+
+if (hasRewards == True):
+    # extra curve rewards calcs
+    _stakingRewards = gauge.reward_contract()
+    stakingRewards = Contract(_stakingRewards)
+    stakingRewardsRate = stakingRewards.rewardRate()
+    stakingRewardsTotalSupply = stakingRewards.totalSupply()
+    # price of reward asset
+    rewardAsset = gauge.reward_tokens(0)
+    rewardPath = [rewardAsset, weth, usdc]
+    priceOfRewardAsset = sushiswapRouter.getAmountsOut(oneCoin, rewardPath)[2] / 1e6
+    rewardsApr = SecondsInYear * (stakingRewardsRate / 1e18) * (priceOfRewardAsset) / (((poolVirtualPrice / 1e18 ) * stakingRewardsTotalSupply / (1e18)) * (underlyingPrice))
+    print("Rewards APR: ", rewardsApr)
+else:
+    rewardsApr = 0
+    print("This pool has no extra rewards")
 
 # first remove Convex's fees, then apply this APR to both our CRV amount (1 - convexKeepCrv) and our cvx displayed as CRV balance
 finalConvexApr = (((1 - convexFee) * currentConvexBoost * baseApr) * (1 + cvx_printed_as_crv))
@@ -203,5 +212,5 @@ depositedInConvex = rewards.balanceOf(convexStrategy)
 convexTargetDebtRatio = (depositedInConvex + sendToConvex*1e18) / (yearnGaugeBalance + depositedInConvex) * 10000
 curveTargetDebtRatio = (1 - convexTargetDebtRatio/10000) * 10000
 
-print("Final Yearn Gross Farmed APY:", "{:.2%}".format(grossFarmedYearnApy),  "\nFinal Convex CRV-Only APY:", "{:.2%}".format(convexCrvOnlyApy), "\nFinal Convex Gross Farmed APY:", "{:.2%}".format(grossFarmedConvexApy),  "\nFinal Overall Gross (With Pool Yield) APY:", "{:.2%}".format(totalApy), "\nFinal Overall Net APY:", "{:.2%}".format(totalNetApy), "\nRatio of Yearn to Convex veCRV, 1 :", "{:.2}".format(veCRV_ratio_for_printing), "\nTarget Ratio of Yearn to Convex funds, 1 :", "{:.2}".format(targetRatio_for_printing), "\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexTargetDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveTargetDebtRatio))
+print("Final Yearn Gross Farmed APY:", "{:.2%}".format(grossFarmedYearnApy),  "\nFinal Convex APY (No CVX):", "{:.2%}".format(convexCrvOnlyApy), "\nFinal Convex Gross Farmed APY:", "{:.2%}".format(grossFarmedConvexApy),  "\nFinal Overall Gross (With Pool Yield) APY:", "{:.2%}".format(totalApy), "\nFinal Overall Net APY:", "{:.2%}".format(totalNetApy), "\nRatio of Yearn to Convex veCRV, 1 :", "{:.2}".format(veCRV_ratio_for_printing), "\nTarget Ratio of Yearn to Convex funds, 1 :", "{:.2}".format(targetRatio_for_printing), "\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexTargetDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveTargetDebtRatio))
 quit()
