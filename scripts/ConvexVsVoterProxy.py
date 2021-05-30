@@ -28,7 +28,7 @@ priceOfCvx = sushiswapRouter.getAmountsOut(oneCoin, cvxPath)[2]/1e6
 prices = [stable, eth, btc, link, eurs]
 booster = Contract("0xF403C135812408BFbE8713b5A23a04b3D48AAE31")
 
-## -----------------CHANGE THIS STUFF HERE!!!!!!!---------------- ##
+## -----------------CHANGE THIS STUFF BELOW HERE!!!!!!!---------------- ##
 # Fees and keepCrv. Adjust these as needed based on changes with either protocol. do 12% convexKeepCrv to account for 16% convex pulls out in fees
 # however, they only do 5% keepCrv. if we really wanted to we could pull these from the convex and voterProxy strategies, but no real need to
 keepCrv = 0.10
@@ -64,7 +64,7 @@ underlyingPrice = prices[1]
 # stETH, most recent send to convex 82,435.63 ETH pool tokens. target debtRatios of 7108 (convex) and 2892
 # lpToken = Contract.from_explorer("0x06325440D014e39736583c165C2963BA99fAf14E")
 # poolId = 25
-# # pull this data directly from Curve's UI; too much of a pain to pull dynamically 
+# # pull this data directly from Curve's UI; too much of a pain to pull dynamically
 # poolApy = 0.033
 # vault = Contract("0xdCD90C7f6324cfa40d7169ef80b12031770B4325")
 # # set this to true if this pool has extra rewards like snx, ldo, etc
@@ -72,7 +72,7 @@ underlyingPrice = prices[1]
 # # set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
 # underlyingPrice = prices[1]
 
-## -----------------CHANGE THIS STUFF HERE!!!!!!!---------------- ##
+## -----------------CHANGE THIS STUFF ABOVE HERE!!!!!!!---------------- ##
 ## -------------------------------------------------------------- ##
 # constants, curve addresses
 MaxBoost = 2.5
