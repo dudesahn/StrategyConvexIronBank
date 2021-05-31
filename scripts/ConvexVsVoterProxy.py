@@ -39,38 +39,33 @@ earmarkIncentive = booster.earmarkIncentive()
 convexFee = (lockIncentive + stakerIncentive + earmarkIncentive)/10000
 
 # add whatever other vaults you want here
-# ib, most recent check: send to convex 106,954,685.88 IB pool tokens, target debtRatios of 6981 (convex) and 3019
-# lpToken = Contract.from_explorer("0x5282a4eF67D9C33135340fB3289cc1711c13638C")
+# ib, most recent check: send to convex 52,921,374.28 IB pool tokens, target debtRatios of 7337 (convex) and 2663 (voterProxy)
 # poolId = 29
 # # pull this data directly from Curve's UI; too much of a pain to pull dynamically
 # poolApy = 0.06
-# vault = Contract("0x27b7b1ad7288079A66d12350c828D3C00A6F07d7")
 # # set this to true if this pool has extra rewards like snx, ldo, etc
 # hasRewards = False
 # # set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
 # underlyingPrice = prices[0]
 
-# sETH, most recent check: send to convex 21,404.45 ETH pool tokens, target debtRatios of 5799 (convex) and 4201
-lpToken = Contract.from_explorer("0xA3D87FffcE63B53E0d54fAa1cc983B7eB0b74A9c")
-poolId = 23
-# pull this data directly from Curve's UI; too much of a pain to pull dynamically
-poolApy = 0.0035
-vault = Contract("0x986b4AFF588a109c09B50A03f42E4110E29D353F")
-# set this to true if this pool has extra rewards like snx, ldo, etc
-hasRewards = False
-# set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
-underlyingPrice = prices[1]
-
-# stETH, most recent send to convex 82,435.63 ETH pool tokens. target debtRatios of 7108 (convex) and 2892
-# lpToken = Contract.from_explorer("0x06325440D014e39736583c165C2963BA99fAf14E")
-# poolId = 25
+# sETH, most recent check: send to convex 5,140.66 ETH pool tokens, target debtRatios of 6199 (convex) and 3801 (voterProxy)
+# lpToken = Contract.from_explorer("0xA3D87FffcE63B53E0d54fAa1cc983B7eB0b74A9c")
+# poolId = 23
 # # pull this data directly from Curve's UI; too much of a pain to pull dynamically
-# poolApy = 0.033
-# vault = Contract("0xdCD90C7f6324cfa40d7169ef80b12031770B4325")
+# poolApy = 0.0035
 # # set this to true if this pool has extra rewards like snx, ldo, etc
-# hasRewards = True
+# hasRewards = False
 # # set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
 # underlyingPrice = prices[1]
+
+# stETH, most recent send to convex 26,197.08 ETH pool tokens. target debtRatios of 7404 (convex) and 2596
+poolId = 25
+# pull this data directly from Curve's UI; too much of a pain to pull dynamically
+poolApy = 0.033
+# set this to true if this pool has extra rewards like snx, ldo, etc
+hasRewards = True
+# set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
+underlyingPrice = prices[1]
 
 ## -----------------CHANGE THIS STUFF ABOVE HERE!!!!!!!---------------- ##
 ## -------------------------------------------------------------- ##
@@ -87,6 +82,15 @@ vecrv = Contract("0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2")
 # holds their gauge tokens, also where they keep their veCRV
 convex_voter = Contract("0x989AEb4d175e16225E39E87d0D97A3360524AD80")
 gaugeController = Contract.from_explorer("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
+
+# use the pool ID to pull the LP token from the booster contract
+_lpToken = booster.poolInfo(poolId)[0]
+lpToken = Contract.from_explorer(_lpToken)
+
+# use LP token to pull vault from Yearn's registry
+yearn_registry = Contract("0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804")
+_vault = yearn_registry.latestVault(lpToken)
+vault = Contract(_vault)
 
 # yearn
 # holds our gauge tokens, also where we keep our veCRV
@@ -148,8 +152,6 @@ periods = 365
 compoundingEvents = 365
 totalPerformanceFee = 0.2
 managementFee = 0.02
-
-
 
 if (hasRewards == True):
     # extra curve rewards calcs
