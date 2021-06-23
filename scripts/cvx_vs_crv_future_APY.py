@@ -367,6 +367,7 @@ def stETH():
 	poolId = 25
 	# set this to 0 for stables, 1 for ETH, 2 for WBTC, 3 for LINK, 4 for EURS
 	underlyingPrice = prices[1]
+	hasRewards = True
 	
 	## -----------------CHANGE THIS STUFF ABOVE HERE!!!!!!!---------------- ##
 	## -------------------------------------------------------------- ##
@@ -460,12 +461,28 @@ def stETH():
 	converted_cvx = prices[6] / prices[5]
 	cvx_printed_as_crv = cvxMintedPerCrv * converted_cvx
 	## -------------------------------------------------------------- ##
-	# Calculate our convex and curve raw variable APRs (without base or rewards APR, as those are the same between protocols)
-	cvx_variable_apr = ((1 - convexFee) * currentConvexBoost * baseApr) * (1 + cvx_printed_as_crv)
-	cvx_variable_apr_minus_keep_crv = ((1 - convexFee) * currentConvexBoost * baseApr) * ((1 - convexKeepCrv) + cvx_printed_as_crv)
+	# Add in rewards data for stETH since that's most of its yield
+	if (hasRewards == True):
+	    # extra curve rewards calcs
+	    _stakingRewards = gauge.reward_contract()
+	    stakingRewards = Contract(_stakingRewards)
+	    stakingRewardsRate = stakingRewards.rewardRate()
+	    stakingRewardsTotalSupply = stakingRewards.totalSupply()
+	    # price of reward asset
+	    rewardAsset = gauge.reward_tokens(0)
+	    rewardPath = [rewardAsset, weth, usdc]
+	    priceOfRewardAsset = sushiswapRouter.getAmountsOut(oneCoin, rewardPath)[2] / 1e6
+	    rewardsApr = SecondsInYear * (stakingRewardsRate / 1e18) * (priceOfRewardAsset) / (((poolVirtualPrice / 1e18 ) * stakingRewardsTotalSupply / (1e18)) * (underlyingPrice))
+	else:
+	    rewardsApr = 0
+	    print("This pool has no extra rewards")
 	
-	crv_variable_apr = baseApr * currentYearnBoost
-	crv_variable_apr_minus_keep_crv = baseApr * currentYearnBoost * (1 - keepCrv)
+	# Calculate our convex and curve raw variable APRs (without base or rewards APR, as those are the same between protocols)
+	cvx_variable_apr = ((1 - convexFee) * currentConvexBoost * baseApr) * (1 + cvx_printed_as_crv) + rewardsApr
+	cvx_variable_apr_minus_keep_crv = ((1 - convexFee) * currentConvexBoost * baseApr) * ((1 - convexKeepCrv) + cvx_printed_as_crv) + rewardsApr
+	
+	crv_variable_apr = baseApr * currentYearnBoost + rewardsApr
+	crv_variable_apr_minus_keep_crv = baseApr * currentYearnBoost * (1 - keepCrv) + rewardsApr
 	
 	# ratio of Yearn's veCRV to Convex's
 	veCRV_ratio = vecrv.balanceOf(convex_voter)/vecrv.balanceOf(yearn_voter)
@@ -490,4 +507,4 @@ def stETH():
 	
 	# , "\n\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexTargetDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveTargetDebtRatio))
 	
-	print("\n\nVault Token: ", tokenName, "\nCurve Future APR, no rewards APR :", "{:.2%}".format(crv_variable_apr_minus_keep_crv), "\nConvex Future APR, no rewards APR :", "{:.2%}".format(cvx_variable_apr_minus_keep_crv), "\n\n")
+	print("\n\nVault Token: ", tokenName, "\nCurve Future APR:", "{:.2%}".format(crv_variable_apr_minus_keep_crv), "\nConvex Future APR:", "{:.2%}".format(cvx_variable_apr_minus_keep_crv), "\n\n")
