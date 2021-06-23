@@ -4,11 +4,11 @@ def iron_bank():
 	# establish our prices for our various underlying tokens
 	sushiswapRouter = Contract("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F")
 	uniswapRouter = Contract("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
-	eurs = Contract.from_explorer("0xdB25f211AB05b1c97D595516F45794528a807ad8")
+	eurs = Contract("0xdB25f211AB05b1c97D595516F45794528a807ad8")
 	weth = Contract("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 	usdc = Contract("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
 	wbtc = Contract("0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599")
-	link = Contract.from_explorer("0x514910771AF9Ca656af840dff83E8264EcF986CA")
+	link = Contract("0x514910771AF9Ca656af840dff83E8264EcF986CA")
 	crv = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 	cvx = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 	oneCoin = 1e18
@@ -54,11 +54,11 @@ def iron_bank():
 	# convex
 	# holds their gauge tokens, also where they keep their veCRV
 	convex_voter = Contract("0x989AEb4d175e16225E39E87d0D97A3360524AD80")
-	gaugeController = Contract.from_explorer("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
+	gaugeController = Contract("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
 	
 	# use the pool ID to pull the LP token from the booster contract
 	_lpToken = booster.poolInfo(poolId)[0]
-	lpToken = Contract.from_explorer(_lpToken)
+	lpToken = Contract(_lpToken)
 	
 	# use LP token to pull vault from Yearn's registry
 	yearn_registry = Contract("0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804")
@@ -74,7 +74,7 @@ def iron_bank():
 	poolAddress = Contract(_poolAddress)
 	gauges = registry.get_gauges(poolAddress)
 	gaugeAddress = gauges[0][0]
-	gauge = Contract.from_explorer(gaugeAddress)
+	gauge = Contract(gaugeAddress)
 	gaugeWorkingSupply = gauge.working_supply()
 	gaugeRelativeWeight = gaugeController.gauge_relative_weight(gaugeAddress)
 	gaugeInflationRate = gauge.inflation_rate()
@@ -168,11 +168,11 @@ def sETH():
 	# establish our prices for our various underlying tokens
 	sushiswapRouter = Contract("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F")
 	uniswapRouter = Contract("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
-	eurs = Contract.from_explorer("0xdB25f211AB05b1c97D595516F45794528a807ad8")
+	eurs = Contract("0xdB25f211AB05b1c97D595516F45794528a807ad8")
 	weth = Contract("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 	usdc = Contract("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
 	wbtc = Contract("0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599")
-	link = Contract.from_explorer("0x514910771AF9Ca656af840dff83E8264EcF986CA")
+	link = Contract("0x514910771AF9Ca656af840dff83E8264EcF986CA")
 	crv = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 	cvx = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 	oneCoin = 1e18
@@ -218,11 +218,11 @@ def sETH():
 	# convex
 	# holds their gauge tokens, also where they keep their veCRV
 	convex_voter = Contract("0x989AEb4d175e16225E39E87d0D97A3360524AD80")
-	gaugeController = Contract.from_explorer("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
+	gaugeController = Contract("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
 	
 	# use the pool ID to pull the LP token from the booster contract
 	_lpToken = booster.poolInfo(poolId)[0]
-	lpToken = Contract.from_explorer(_lpToken)
+	lpToken = Contract(_lpToken)
 	
 	# use LP token to pull vault from Yearn's registry
 	yearn_registry = Contract("0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804")
@@ -238,7 +238,7 @@ def sETH():
 	poolAddress = Contract(_poolAddress)
 	gauges = registry.get_gauges(poolAddress)
 	gaugeAddress = gauges[0][0]
-	gauge = Contract.from_explorer(gaugeAddress)
+	gauge = Contract(gaugeAddress)
 	gaugeWorkingSupply = gauge.working_supply()
 	gaugeRelativeWeight = gaugeController.gauge_relative_weight(gaugeAddress)
 	gaugeInflationRate = gauge.inflation_rate()
@@ -332,11 +332,11 @@ def stETH():
 	# establish our prices for our various underlying tokens
 	sushiswapRouter = Contract("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F")
 	uniswapRouter = Contract("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
-	eurs = Contract.from_explorer("0xdB25f211AB05b1c97D595516F45794528a807ad8")
+	eurs = Contract("0xdB25f211AB05b1c97D595516F45794528a807ad8")
 	weth = Contract("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 	usdc = Contract("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
 	wbtc = Contract("0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599")
-	link = Contract.from_explorer("0x514910771AF9Ca656af840dff83E8264EcF986CA")
+	link = Contract("0x514910771AF9Ca656af840dff83E8264EcF986CA")
 	crv = Contract("0xD533a949740bb3306d119CC777fa900bA034cd52")
 	cvx = Contract("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
 	oneCoin = 1e18
@@ -382,11 +382,11 @@ def stETH():
 	# convex
 	# holds their gauge tokens, also where they keep their veCRV
 	convex_voter = Contract("0x989AEb4d175e16225E39E87d0D97A3360524AD80")
-	gaugeController = Contract.from_explorer("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
+	gaugeController = Contract("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB")
 	
 	# use the pool ID to pull the LP token from the booster contract
 	_lpToken = booster.poolInfo(poolId)[0]
-	lpToken = Contract.from_explorer(_lpToken)
+	lpToken = Contract(_lpToken)
 	
 	# use LP token to pull vault from Yearn's registry
 	yearn_registry = Contract("0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804")
@@ -402,7 +402,7 @@ def stETH():
 	poolAddress = Contract(_poolAddress)
 	gauges = registry.get_gauges(poolAddress)
 	gaugeAddress = gauges[0][0]
-	gauge = Contract.from_explorer(gaugeAddress)
+	gauge = Contract(gaugeAddress)
 	gaugeWorkingSupply = gauge.working_supply()
 	gaugeRelativeWeight = gaugeController.gauge_relative_weight(gaugeAddress)
 	gaugeInflationRate = gauge.inflation_rate()
@@ -417,7 +417,7 @@ def stETH():
 	convexDebtRatio = vault.strategies(_convexStrategy)[2]
 	
 	# pull keepCRV data based on the vault
-	keepCrv = curveStrategy.keepCRV()/1e4
+	keepCrv = curveStrategy.keepCrvPercent()/1e4
 	convexKeepCrv = convexStrategy.keepCRV()/1e4
 	
 	# yearn-specific metrics
