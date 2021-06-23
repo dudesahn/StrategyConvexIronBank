@@ -1,4 +1,4 @@
-from brownie import Contract
+from brownie import Contract, accounts, web3, chain
 
 def iron_bank():
 	# establish our prices for our various underlying tokens
