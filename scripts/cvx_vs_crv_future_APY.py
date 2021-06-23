@@ -1,3 +1,5 @@
+from brownie import Contract
+
 def iron_bank():
 	# establish our prices for our various underlying tokens
 	sushiswapRouter = Contract("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F")
@@ -160,7 +162,7 @@ def iron_bank():
 	
 	# , "\n\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexTargetDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveTargetDebtRatio))
 	
-	print("Vault Token: ", tokenName, "\nCurve Future APR :", "{:.2%}".format(crv_variable_apr_minus_keep_crv), "\nConvex Future APR :", "{:.2%}".format(cvx_variable_apr_minus_keep_crv))
+	print("\n\nVault Token: ", tokenName, "\nCurve Future APR :", "{:.2%}".format(crv_variable_apr_minus_keep_crv), "\nConvex Future APR :", "{:.2%}".format(cvx_variable_apr_minus_keep_crv), "\n\n")
 
 def sETH():
 	# establish our prices for our various underlying tokens
@@ -324,7 +326,7 @@ def sETH():
 	
 	# , "\n\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexTargetDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveTargetDebtRatio))
 	
-	print("Vault Token: ", tokenName, "\nCurve Future APR :", "{:.2%}".format(crv_variable_apr_minus_keep_crv), "\nConvex Future APR :", "{:.2%}".format(cvx_variable_apr_minus_keep_crv))
+	print("\n\nVault Token: ", tokenName, "\nCurve Future APR :", "{:.2%}".format(crv_variable_apr_minus_keep_crv), "\nConvex Future APR :", "{:.2%}".format(cvx_variable_apr_minus_keep_crv), "\n\n")
 	
 def stETH():
 	# establish our prices for our various underlying tokens
@@ -488,4 +490,4 @@ def stETH():
 	
 	# , "\n\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexTargetDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveTargetDebtRatio))
 	
-	print("Vault Token: ", tokenName, "\nCurve Future APR, no rewards APR :", "{:.2%}".format(crv_variable_apr_minus_keep_crv), "\nConvex Future APR, no rewards APR :", "{:.2%}".format(cvx_variable_apr_minus_keep_crv))
+	print("\n\nVault Token: ", tokenName, "\nCurve Future APR, no rewards APR :", "{:.2%}".format(crv_variable_apr_minus_keep_crv), "\nConvex Future APR, no rewards APR :", "{:.2%}".format(cvx_variable_apr_minus_keep_crv), "\n\n")
