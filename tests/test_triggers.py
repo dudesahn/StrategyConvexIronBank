@@ -12,8 +12,8 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     starting_assets = vault.totalAssets()
     strategy.harvest({"from": gov})
 
-    # simulate a day of earnings
-    chain.sleep(86400)
+    # simulate a half day of earnings
+    chain.sleep(43200)
     chain.mine(1)
 
     # harvest should trigger false
