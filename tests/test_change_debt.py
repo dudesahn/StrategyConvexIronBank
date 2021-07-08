@@ -16,7 +16,7 @@ def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, c
 
     # debtRatio is in BPS (aka, max is 10,000, which represents 100%), and is a fraction of the funds that can be in the strategy
     currentDebt = vault.strategies(strategy)[2]
-    vault.updateStrategyDebtRatio(strategy, currentDebt/2, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy, currentDebt / 2, {"from": gov})
     strategy.harvest({"from": dudesahn})
 
     assert rewardsContract.balanceOf(strategy) < (startingLive)
@@ -29,7 +29,7 @@ def test_change_debt(gov, token, vault, dudesahn, strategist, whale, strategy, c
     # simulate a day of waiting for share price to bump back up
     chain.sleep(86400)
     chain.mine(1)
-    
+
     # withdraw and confirm we made money
-    vault.withdraw({"from": whale})    
-    assert token.balanceOf(whale) > startingWhale 
+    vault.withdraw({"from": whale})
+    assert token.balanceOf(whale) > startingWhale

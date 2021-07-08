@@ -66,8 +66,10 @@ contract StrategyConvexIronBank is BaseStrategy {
     address[] public crvPath; // path to sell CRV
     address[] public convexTokenPath; // path to sell CVX
 
-    address public constant depositContract = 0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools use, aka booster
-    address public constant rewardsContract = 0x3E03fFF82F77073cc590b656D42FceB12E4910A8; // This is unique to each curve pool, this one is for iron bank
+    address public constant depositContract =
+        0xF403C135812408BFbE8713b5A23a04b3D48AAE31; // this is the deposit contract that all pools use, aka booster
+    address public constant rewardsContract =
+        0x3E03fFF82F77073cc590b656D42FceB12E4910A8; // This is unique to each curve pool, this one is for iron bank
     uint256 public constant pid = 29; // this is unique to each pool
     uint256 public optimal; // this is the optimal token to deposit back to our curve pool. 0 DAI, 1 USDC, 2 USDT
 
@@ -150,10 +152,7 @@ contract StrategyConvexIronBank is BaseStrategy {
         if (stakedTokens > 0 && claimableTokens > 0) {
             // this claims our CRV, CVX, and any extra tokens like SNX or ANKR
             // if for some reason we don't want extra rewards, make sure we don't harvest them
-            IConvexRewards(rewardsContract).getReward(
-                address(this),
-                false
-            );
+            IConvexRewards(rewardsContract).getReward(address(this), false);
 
             uint256 crvBalance = crv.balanceOf(address(this));
             uint256 convexBalance = convexToken.balanceOf(address(this));
@@ -196,7 +195,10 @@ contract StrategyConvexIronBank is BaseStrategy {
                 claimRewards
             );
 
-            _debtPayment = Math.min(_debtOutstanding, want.balanceOf(address(this)));
+            _debtPayment = Math.min(
+                _debtOutstanding,
+                want.balanceOf(address(this))
+            );
             // want to make sure we report losses properly here
             if (_debtPayment < _debtOutstanding) {
                 _loss = _loss.add(_debtOutstanding.sub(_debtPayment));
@@ -235,7 +237,6 @@ contract StrategyConvexIronBank is BaseStrategy {
             _liquidatedAmount = Math.min(_amountNeeded, withdrawnBal);
 
             _loss = _amountNeeded.sub(_liquidatedAmount);
-            
         } else {
             // we have enough balance to cover the liquidation available
             return (_amountNeeded, 0);
@@ -358,20 +359,20 @@ contract StrategyConvexIronBank is BaseStrategy {
     }
 
     // convert our keeper's eth cost into dai
-    function ethToDai(uint256 _ethAmount)
-        internal
-        view
-        returns (uint256)
-    {
+    function ethToDai(uint256 _ethAmount) internal view returns (uint256) {
         if (_ethAmount > 0) {
             address[] memory ethPath = new address[](2);
-        	ethPath[0] = address(weth);
-        	ethPath[1] = address(dai);
-        	uint256[] memory callCostInDai = IUniswapV2Router02(sushiswapRouter).getAmountsOut(_ethAmount, ethPath);
-        	
-        	return callCostInDai[callCostInDai.length - 1];
+            ethPath[0] = address(weth);
+            ethPath[1] = address(dai);
+            uint256[] memory callCostInDai =
+                IUniswapV2Router02(sushiswapRouter).getAmountsOut(
+                    _ethAmount,
+                    ethPath
+                );
+
+            return callCostInDai[callCostInDai.length - 1];
         } else {
-        	return 0;
+            return 0;
         }
     }
 

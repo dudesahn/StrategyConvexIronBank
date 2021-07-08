@@ -13,7 +13,7 @@ def test_revoke_strategy_from_vault(gov, token, vault, whale, chain, strategy):
     assert vaultAssets_after_revoke >= vaultAssets_starting
     assert strategy.estimatedTotalAssets() == 0
     assert token.balanceOf(vault) >= vault_holdings_starting + strategy_starting
-    
+
     # simulate a day of waiting for share price to bump back up
     chain.sleep(86400)
     chain.mine(1)

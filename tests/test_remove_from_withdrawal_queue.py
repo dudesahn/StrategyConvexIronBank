@@ -3,9 +3,7 @@ from brownie import Contract
 from brownie import config
 
 # test passes as of 21-06-26
-def test_remove_from_withdrawal_queue(
-    gov, token, vault, whale, strategy, chain, dudesahn, rewardsContract
-):
+def test_remove_from_withdrawal_queue(gov, token, vault, whale, strategy, chain, dudesahn, rewardsContract):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
@@ -15,7 +13,7 @@ def test_remove_from_withdrawal_queue(
     # simulate a day of earnings
     chain.sleep(86400)
     chain.mine(1)
-    earned_crv = rewardsContract.earned(strategy)/1e18
+    earned_crv = rewardsContract.earned(strategy) / 1e18
     print("CRV Earned and waiting to be claimed:", earned_crv)
     assert earned_crv > 0
     strategy.harvest({"from": dudesahn})

@@ -20,7 +20,7 @@ def test_triggers(gov, token, vault, dudesahn, strategist, whale, strategy, chai
     tx = strategy.harvestTrigger(10e18, {"from": gov})
     print("\nShould we harvest? Should be False.", tx)
     assert tx == False
-    
+
     # harvest should trigger true
     tx = strategy.harvestTrigger(0, {"from": gov})
     print("\nShould we harvest? Should be True.", tx)
