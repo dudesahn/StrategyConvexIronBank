@@ -366,14 +366,16 @@ contract StrategyConvexIronBank is BaseStrategy {
         view
         returns (uint256)
     {
-        address[] memory ethPath = new address[](2);
-        ethPath[0] = address(weth);
-        ethPath[1] = address(dai);
-
-        uint256[] memory callCostInDai =
-            IUniswapV2Router02(sushiswapRouter).getAmountsOut(_ethAmount, ethPath);
-
-        return callCostInDai[callCostInDai.length - 1];
+        if (_ethAmount > 0) {
+            address[] memory ethPath = new address[](2);
+        	ethPath[0] = address(weth);
+        	ethPath[1] = address(dai);
+        	uint256[] memory callCostInDai = IUniswapV2Router02(sushiswapRouter).getAmountsOut(_ethAmount, ethPath);
+        	
+        	return callCostInDai[callCostInDai.length - 1];
+        } else {
+        	return 0;
+        }
     }
 
     /* ========== SETTERS ========== */

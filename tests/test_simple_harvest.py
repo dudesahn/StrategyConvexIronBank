@@ -3,7 +3,7 @@ from brownie import Contract
 from brownie import config
 
 # test passes as of 21-05-20
-def test_simple_harvest(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract, curveVoterProxyStrategy):
+def test_simple_harvest(gov, token, vault, dudesahn, strategist, whale, strategy, chain, strategist_ms, rewardsContract):
     ## deposit to the vault after approving
     startingWhale = token.balanceOf(whale)
     token.approve(vault, 2 ** 256 - 1, {"from": whale})
@@ -31,15 +31,14 @@ def test_simple_harvest(gov, token, vault, dudesahn, strategist, whale, strategy
     new_assets_dai = vault.totalAssets()
     # we can't use strategyEstimated Assets because the profits are sent to the vault
     assert new_assets_dai > old_assets_dai
-    print("\nAssets after 10 days: ", new_assets_dai/1e18)
-    print("\nStaked Assets after 10 days: ", rewardsContract.balanceOf(strategy)/1e18)
+    print("\nAssets after 1 day: ", new_assets_dai/1e18)
+    print("\nStaked Assets after 1 day: ", rewardsContract.balanceOf(strategy)/1e18)
 
 
     # Display estimated APR based on the past day
     print("\nEstimated DAI APR: ", "{:.2%}".format(((new_assets_dai - old_assets_dai) * 365) / (strategy.estimatedTotalAssets())))
     
     # simulate a day of waiting for share price to bump back up
-    curveVoterProxyStrategy.harvest({"from": gov})
     chain.sleep(86400)
     chain.mine(1)
     

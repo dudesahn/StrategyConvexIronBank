@@ -10,13 +10,6 @@ def test_operation(gov, token, vault, dudesahn, strategist, whale, strategy, cha
     vault.deposit(100000e18, {"from": whale})
     newWhale = token.balanceOf(whale)
     starting_assets = vault.totalAssets()
-        
-    # tend our strategy 
-    strategy.tend({"from": dudesahn})
-    
-    # simulate a day of earnings
-    chain.sleep(86400)
-    chain.mine(1)
 
     # harvest, store asset amount
     strategy.harvest({"from": dudesahn})
@@ -81,7 +74,6 @@ def test_operation(gov, token, vault, dudesahn, strategist, whale, strategy, cha
     print("\nEstimated CVX Donation APR: ", "{:.2%}".format(((new_assets_from_convex_sale - new_assets_usdt) * 365) / (strategy.estimatedTotalAssets())))
 
     # simulate a day of waiting for share price to bump back up
-    curveVoterProxyStrategy.harvest({"from": gov})
     chain.sleep(86400)
     chain.mine(1)
     

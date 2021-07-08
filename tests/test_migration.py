@@ -30,22 +30,12 @@ def test_migration(gov, token, vault, dudesahn, strategist, whale, strategy, cha
     startingVault = vault.totalAssets()
     print("\nVault starting assets with new strategy: ", startingVault)
     
-    # simulate a day of earnings
-    chain.sleep(86400)
-    chain.mine(1)
-    
-    # test out tend
-    new_strategy.tend({"from": dudesahn})
-    assert new_strategy.tendCounter() == 1
-    
     # simulate a day of waiting for share price to bump back up
-    curveVoterProxyStrategy.harvest({"from": gov})
     chain.sleep(86400)
     chain.mine(1)
     
     # Test out our migrated strategy, confirm we're making a profit
     new_strategy.harvest({"from": dudesahn})
-    assert new_strategy.tendCounter() == 0
     vaultAssets_2 = vault.totalAssets()
     assert vaultAssets_2 > startingVault
     print("\nAssets after 1 day harvest: ", vaultAssets_2)
