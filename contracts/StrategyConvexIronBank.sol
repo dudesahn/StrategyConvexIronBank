@@ -2,8 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-/* ========== CORE LIBRARIES ========== */
-
+// These are the core Yearn libraries
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -16,8 +15,6 @@ import {
     BaseStrategy,
     StrategyParams
 } from "@yearnvaults/contracts/BaseStrategy.sol";
-
-/* ========== INTERFACES ========== */
 
 interface IConvexRewards {
     // strategy's staked balance in the synthetix staking contract
