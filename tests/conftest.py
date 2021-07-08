@@ -97,7 +97,7 @@ def whale(accounts):
 @pytest.fixture(scope="module")
 def convexWhale(accounts):
     # Totally in it for the tech (largest EOA holder of CVX, ~70k worth)
-    convexWhale = accounts.at('0x48e91eA1b2ce7FE7F39b0f606412d63855bfD674', force=True)
+    convexWhale = accounts.at('0xC55c7d2816C3a1BCD452493aA99EF11213b0cD3a', force=True)
     yield convexWhale
 
 # this is the live strategy for ib3crv curve
