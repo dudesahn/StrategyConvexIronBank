@@ -90,8 +90,8 @@ def strategist_ms(accounts):
 
 @pytest.fixture(scope="module")
 def whale(accounts):
-    # Totally in it for the tech (largest EOA holder of ib-3crv, ~600k worth)
-    whale = accounts.at('0xE594173Aaa1493665EC6A19a0D170C76EEa1124a', force=True)
+    # Totally in it for the tech
+    whale = accounts.at('0x9817569Dc3015C84846159dAbcb80425186f506f', force=True)
     yield whale
 
 @pytest.fixture(scope="module")
