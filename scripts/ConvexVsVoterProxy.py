@@ -19,12 +19,12 @@ crvPath = [crv, weth, usdc]
 cvxPath = [cvx, weth, usdc]
 eursPath = [eurs, usdc]
 stable = 1
-eth = sushiswapRouter.getAmountsOut(oneCoin, wethPath)[1]/1e6
-btc = (sushiswapRouter.getAmountsOut(oneWbtc, wbtcPath)[2])/1e6
-link = sushiswapRouter.getAmountsOut(oneCoin, linkPath)[2]/1e6
-eurs = uniswapRouter.getAmountsOut(oneEurs, eursPath)[1]/1e6
-priceOfCrv = sushiswapRouter.getAmountsOut(oneCoin, crvPath)[2]/1e6
-priceOfCvx = sushiswapRouter.getAmountsOut(oneCoin, cvxPath)[2]/1e6
+eth = sushiswapRouter.getAmountsOut(oneCoin, wethPath)[1] / 1e6
+btc = (sushiswapRouter.getAmountsOut(oneWbtc, wbtcPath)[2]) / 1e6
+link = sushiswapRouter.getAmountsOut(oneCoin, linkPath)[2] / 1e6
+eurs = uniswapRouter.getAmountsOut(oneEurs, eursPath)[1] / 1e6
+priceOfCrv = sushiswapRouter.getAmountsOut(oneCoin, crvPath)[2] / 1e6
+priceOfCvx = sushiswapRouter.getAmountsOut(oneCoin, cvxPath)[2] / 1e6
 prices = [stable, eth, btc, link, eurs]
 booster = Contract("0xF403C135812408BFbE8713b5A23a04b3D48AAE31")
 
@@ -36,7 +36,7 @@ convexKeepCrv = 0.10
 lockIncentive = booster.lockIncentive()
 stakerIncentive = booster.stakerIncentive()
 earmarkIncentive = booster.earmarkIncentive()
-convexFee = (lockIncentive + stakerIncentive + earmarkIncentive)/10000
+convexFee = (lockIncentive + stakerIncentive + earmarkIncentive) / 10000
 
 # add whatever other vaults you want here
 # ib, most recent check: send to convex 52,921,374.28 IB pool tokens, target debtRatios of 7337 (convex) and 2663 (voterProxy)
@@ -71,7 +71,7 @@ underlyingPrice = prices[1]
 ## -------------------------------------------------------------- ##
 # constants, curve addresses
 MaxBoost = 2.5
-InverseMaxBoost = (1 / MaxBoost)
+InverseMaxBoost = 1 / MaxBoost
 SecondsInYear = 31536000
 FeeDenominator = 1e4
 EthConstant = 1e18
@@ -115,7 +115,14 @@ convexWorkingBalance = gauge.working_balances(convex_voter)
 convexGaugeBalance = gauge.balanceOf(convex_voter)
 
 # This is the base Apr for the pool
-baseApr = (gaugeInflationRate) * (gaugeRelativeWeight) * (SecondsInYear/(gaugeWorkingSupply)) * (InverseMaxBoost/(poolVirtualPrice)) * (priceOfCrv) / (underlyingPrice)
+baseApr = (
+    (gaugeInflationRate)
+    * (gaugeRelativeWeight)
+    * (SecondsInYear / (gaugeWorkingSupply))
+    * (InverseMaxBoost / (poolVirtualPrice))
+    * (priceOfCrv)
+    / (underlyingPrice)
+)
 
 ## -------------------------------------------------------------- ##
 # calculate our boosted values
@@ -124,7 +131,7 @@ currentYearnBoost = yearnWorkingBalance / (InverseMaxBoost * yearnGaugeBalance) 
 
 # convex. if this divides by 0, then we don't have anything in that gauge and this will error.
 # Convex doesn't take fees out of reward tokens, so we can ignore these in our comparison, same for base pool APY
-currentConvexBoost = convexWorkingBalance / (InverseMaxBoost * convexGaugeBalance) * (convexGaugeBalance/convexGaugeBalance)
+currentConvexBoost = convexWorkingBalance / (InverseMaxBoost * convexGaugeBalance) * (convexGaugeBalance / convexGaugeBalance)
 
 ## -------------------------------------------------------------- ##
 # this is how convex calculates how much CVX they mint per CRV farmed in their CVX contract
@@ -133,7 +140,7 @@ totalCliffs = 1000
 maxSupply = 100 * 1000000 * 1e18
 reductionPerCliff = 100000000000000000000000
 supply = cvx.totalSupply()
-cliff = supply/(reductionPerCliff)
+cliff = supply / (reductionPerCliff)
 
 # pretend we are claiming 1 CRV
 claimableCrv = 1
@@ -153,7 +160,7 @@ compoundingEvents = 365
 totalPerformanceFee = 0.2
 managementFee = 0.02
 
-if (hasRewards == True):
+if hasRewards == True:
     # extra curve rewards calcs
     _stakingRewards = gauge.reward_contract()
     stakingRewards = Contract(_stakingRewards)
@@ -163,16 +170,21 @@ if (hasRewards == True):
     rewardAsset = gauge.reward_tokens(0)
     rewardPath = [rewardAsset, weth, usdc]
     priceOfRewardAsset = sushiswapRouter.getAmountsOut(oneCoin, rewardPath)[2] / 1e6
-    rewardsApr = SecondsInYear * (stakingRewardsRate / 1e18) * (priceOfRewardAsset) / (((poolVirtualPrice / 1e18 ) * stakingRewardsTotalSupply / (1e18)) * (underlyingPrice))
+    rewardsApr = (
+        SecondsInYear
+        * (stakingRewardsRate / 1e18)
+        * (priceOfRewardAsset)
+        / (((poolVirtualPrice / 1e18) * stakingRewardsTotalSupply / (1e18)) * (underlyingPrice))
+    )
     print("Rewards APR: ", rewardsApr)
 else:
     rewardsApr = 0
     print("This pool has no extra rewards")
 
 # first remove Convex's fees, then apply this APR to both our CRV amount (1 - convexKeepCrv) and our cvx displayed as CRV balance
-finalConvexApr = (((1 - convexFee) * currentConvexBoost * baseApr) * (1 + cvx_printed_as_crv))
+finalConvexApr = ((1 - convexFee) * currentConvexBoost * baseApr) * (1 + cvx_printed_as_crv)
 convexCrvOnlyApr = (1 - convexFee) * currentConvexBoost * baseApr
-convexCrvOnlyApy = ((1+ ((convexCrvOnlyApr + rewardsApr) / periods)) ** periods) - 1
+convexCrvOnlyApy = ((1 + ((convexCrvOnlyApr + rewardsApr) / periods)) ** periods) - 1
 
 # calculate our final yield on Yearn, minus underlying pool or rewards yield
 finalYearnApr = currentYearnBoost * baseApr
@@ -184,21 +196,27 @@ curveDebtRatio = vault.strategies(curveStrategy)[2]
 convexDebtRatio = vault.strategies(convexStrategy)[2]
 
 # Calculate overall APYs
-grossFarmedYearnApy = (keepCrv * finalYearnApr) + (1 + (finalYearnApr * (1 - keepCrv) + rewardsApr) / compoundingEvents) ** (compoundingEvents) - 1
-grossFarmedConvexApy = (convexKeepCrv * finalConvexApr) + (1 + (finalConvexApr * (1 - convexKeepCrv) + rewardsApr) / compoundingEvents) ** (compoundingEvents) - 1
-totalApy = ((1 + grossFarmedYearnApy) * (1 + poolApy) - 1) * curveDebtRatio/10000 + ((1 + grossFarmedConvexApy) * (1 + poolApy) - 1) * convexDebtRatio/10000
+grossFarmedYearnApy = (
+    (keepCrv * finalYearnApr) + (1 + (finalYearnApr * (1 - keepCrv) + rewardsApr) / compoundingEvents) ** (compoundingEvents) - 1
+)
+grossFarmedConvexApy = (
+    (convexKeepCrv * finalConvexApr) + (1 + (finalConvexApr * (1 - convexKeepCrv) + rewardsApr) / compoundingEvents) ** (compoundingEvents) - 1
+)
+totalApy = ((1 + grossFarmedYearnApy) * (1 + poolApy) - 1) * curveDebtRatio / 10000 + (
+    (1 + grossFarmedConvexApy) * (1 + poolApy) - 1
+) * convexDebtRatio / 10000
 
 # Net APYs
-netConvexApr = ((finalConvexApr * (1 - convexKeepCrv) + rewardsApr) * (1 - totalPerformanceFee) - managementFee)
+netConvexApr = (finalConvexApr * (1 - convexKeepCrv) + rewardsApr) * (1 - totalPerformanceFee) - managementFee
 netFarmedConvexApy = (1 + (netConvexApr / compoundingEvents)) ** (compoundingEvents) - 1
 netConvexApy = ((1 + netFarmedConvexApy) * (1 + poolApy)) - 1
-netYearnApr = ((finalYearnApr * (1 - keepCrv) + rewardsApr) * (1 - totalPerformanceFee) - managementFee)
+netYearnApr = (finalYearnApr * (1 - keepCrv) + rewardsApr) * (1 - totalPerformanceFee) - managementFee
 netFarmedYearnApy = (1 + (netYearnApr / compoundingEvents)) ** (compoundingEvents) - 1
 netYearnApy = ((1 + netFarmedYearnApy) * (1 + poolApy)) - 1
 totalNetApy = ((netYearnApy)) * curveDebtRatio / 10000 + ((netConvexApy)) * convexDebtRatio / 10000
 
 # ratio of Yearn's veCRV to Convex's
-veCRV_ratio = vecrv.balanceOf(convex_voter)/vecrv.balanceOf(yearn_voter)
+veCRV_ratio = vecrv.balanceOf(convex_voter) / vecrv.balanceOf(yearn_voter)
 veCRV_ratio_for_printing = veCRV_ratio
 price_fee_cvx_printing_ratio = ((1 - convexFee) * (1 - convexKeepCrv) + cvx_printed_as_crv) / (1 - keepCrv)
 
@@ -207,15 +225,38 @@ targetRatio = veCRV_ratio * price_fee_cvx_printing_ratio
 targetRatio_for_printing = targetRatio
 
 # amount needed to transfer from yearn to Convex. If positive, send funds to convex, if negative, send that much back to yearn.
-sendToConvex = ((targetRatio_for_printing / (1 + targetRatio_for_printing)) * (yearnGaugeBalance + convexGaugeBalance)/1e18 - convexGaugeBalance/1e18)
+sendToConvex = (targetRatio_for_printing / (1 + targetRatio_for_printing)) * (
+    yearnGaugeBalance + convexGaugeBalance
+) / 1e18 - convexGaugeBalance / 1e18
 
 # target debt ratios for each strategy, assuming 100% deployed
 targetRewards = booster.poolInfo(poolId)[3]
 rewards = Contract(targetRewards)
 depositedInConvex = rewards.balanceOf(convexStrategy)
 
-convexTargetDebtRatio = (depositedInConvex + sendToConvex*1e18) / (yearnGaugeBalance + depositedInConvex) * 10000
-curveTargetDebtRatio = (1 - convexTargetDebtRatio/10000) * 10000
+convexTargetDebtRatio = (depositedInConvex + sendToConvex * 1e18) / (yearnGaugeBalance + depositedInConvex) * 10000
+curveTargetDebtRatio = (1 - convexTargetDebtRatio / 10000) * 10000
 
-print("Final Yearn Gross Farmed APY:", "{:.2%}".format(grossFarmedYearnApy),  "\nFinal Convex APY (No CVX):", "{:.2%}".format(convexCrvOnlyApy), "\nFinal Convex Gross Farmed APY:", "{:.2%}".format(grossFarmedConvexApy),  "\nFinal Overall Gross (With Pool Yield) APY:", "{:.2%}".format(totalApy), "\nFinal Overall Net APY:", "{:.2%}".format(totalNetApy), "\nRatio of Yearn to Convex veCRV, 1 :", "{:.2}".format(veCRV_ratio_for_printing), "\nTarget Ratio of Yearn to Convex funds, 1 :", "{:.2}".format(targetRatio_for_printing), "\nSend this much want to Convex:", "{:,.2f}".format(sendToConvex), "\nTarget Convex debtRatio: ", "{:.0f}".format(convexTargetDebtRatio), "\nTarget Curve debtRatio: ", "{:.0f}".format(curveTargetDebtRatio))
+print(
+    "Final Yearn Gross Farmed APY:",
+    "{:.2%}".format(grossFarmedYearnApy),
+    "\nFinal Convex APY (No CVX):",
+    "{:.2%}".format(convexCrvOnlyApy),
+    "\nFinal Convex Gross Farmed APY:",
+    "{:.2%}".format(grossFarmedConvexApy),
+    "\nFinal Overall Gross (With Pool Yield) APY:",
+    "{:.2%}".format(totalApy),
+    "\nFinal Overall Net APY:",
+    "{:.2%}".format(totalNetApy),
+    "\nRatio of Yearn to Convex veCRV, 1 :",
+    "{:.2}".format(veCRV_ratio_for_printing),
+    "\nTarget Ratio of Yearn to Convex funds, 1 :",
+    "{:.2}".format(targetRatio_for_printing),
+    "\nSend this much want to Convex:",
+    "{:,.2f}".format(sendToConvex),
+    "\nTarget Convex debtRatio: ",
+    "{:.0f}".format(convexTargetDebtRatio),
+    "\nTarget Curve debtRatio: ",
+    "{:.0f}".format(curveTargetDebtRatio),
+)
 quit()
