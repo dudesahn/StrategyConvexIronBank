@@ -55,8 +55,6 @@ interface IConvexDeposit {
     function withdraw(uint256 _pid, uint256 _amount) external returns (bool);
 }
 
-/* ========== CONTRACT ========== */
-
 contract StrategyConvexIronBank is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
@@ -188,7 +186,7 @@ contract StrategyConvexIronBank is BaseStrategy {
             uint256 crvRemainder = crvBalance.sub(_keepCRV);
 
             _sellCrv(crvRemainder);
-            if (convexBalance > 0) _sellConvex(convexBalance);
+            _sellConvex(convexBalance);
 
             if (optimal == 0) {
                 uint256 daiBalance = dai.balanceOf(address(this));
@@ -270,7 +268,7 @@ contract StrategyConvexIronBank is BaseStrategy {
                 uint256 crvRemainder = crvBalance.sub(_keepCRV);
 
                 _sellCrv(crvRemainder);
-                if (convexBalance > 0) _sellConvex(convexBalance);
+                _sellConvex(convexBalance);
                 // increase our tend counter by 1 so we can know when we should harvest again
                 uint256 previousTendCounter = tendCounter;
                 tendCounter = previousTendCounter.add(1);
@@ -295,16 +293,9 @@ contract StrategyConvexIronBank is BaseStrategy {
             uint256 withdrawnBal = want.balanceOf(address(this));
             _liquidatedAmount = Math.min(_amountNeeded, withdrawnBal);
 
-            // if _amountNeeded != withdrawnBal, then we have an error
-            if (_amountNeeded != withdrawnBal) {
-                uint256 assets = estimatedTotalAssets();
-                uint256 debt = vault.strategies(address(this)).totalDebt;
-                _loss = debt.sub(assets);
-            }
-            require(_liquidatedAmount + _loss == _amountNeeded);
+            _loss = _amountNeeded.sub(_liquidatedAmount);
         } else {
             // we have enough balance to cover the liquidation available
-            require(_liquidatedAmount + _loss == _amountNeeded);
             return (_amountNeeded, 0);
         }
     }
@@ -427,7 +418,7 @@ contract StrategyConvexIronBank is BaseStrategy {
 
         // check if it makes sense to send funds from vault to strategy
         uint256 credit = vault.creditAvailable();
-        if (profitFactor.mul(callCost) < credit.add(profit)) return true;
+        return (profitFactor.mul(callCost) < credit.add(profit));
 
         // calculate how much profit we'll make if we harvest
         uint256 harvestProfit = claimableProfitInDolla();
@@ -486,7 +477,6 @@ contract StrategyConvexIronBank is BaseStrategy {
         uint256 maxSupply = 100 * 1000000 * 1e18; // 100mil
         uint256 reductionPerCliff = 100000000000000000000000; // 100,000
         uint256 supply = convexToken.totalSupply();
-        uint256 mintableCvx;
 
         uint256 cliff = supply.div(reductionPerCliff);
         //mint if below total cliffs
@@ -494,35 +484,34 @@ contract StrategyConvexIronBank is BaseStrategy {
             //for reduction% take inverse of current cliff
             uint256 reduction = totalCliffs.sub(cliff);
             //reduce
-            mintableCvx = claimableCrv.mul(reduction).div(totalCliffs);
+            uint256 mintableCvx = claimableCrv.mul(reduction).div(totalCliffs);
 
             //supply cap check
             uint256 amtTillMax = maxSupply.sub(supply);
             if (mintableCvx > amtTillMax) {
                 mintableCvx = amtTillMax;
             }
-        }
 
-        uint256 crvValue;
-        if (claimableCrv > 0) {
             uint256[] memory crvSwap =
                 IUniswapV2Router02(crvRouter).getAmountsOut(
                     claimableCrv,
                     crvPath
                 );
-            crvValue = crvSwap[2];
-        }
+            uint256 crvValue = crvSwap[2];
 
-        uint256 cvxValue;
-        if (mintableCvx > 0) {
-            uint256[] memory cvxSwap =
-                IUniswapV2Router02(cvxRouter).getAmountsOut(
-                    mintableCvx,
-                    convexTokenPath
-                );
-            cvxValue = cvxSwap[2];
+            uint256 cvxValue = 0;
+
+            if (mintableCvx > 0) {
+                uint256[] memory cvxSwap =
+                    IUniswapV2Router02(cvxRouter).getAmountsOut(
+                        mintableCvx,
+                        convexTokenPath
+                    );
+                cvxValue = cvxSwap[2];
+            }
+
+            return crvValue.add(cvxValue); // dollar value of our harvest
         }
-        return crvValue.add(cvxValue); // dollar value of our harvest
     }
 
     // set number of tends before we call our next harvest
@@ -546,7 +535,7 @@ contract StrategyConvexIronBank is BaseStrategy {
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
 
     // Set the amount of CRV to be locked in Yearn's veCRV voter from each harvest. Default is 10%.
-    function setKeepCRV(uint256 _keepCRV) external onlyGovernance {
+    function setKeepCRV(uint256 _keepCRV) external onlyAuthorized {
         keepCRV = _keepCRV;
     }
 
