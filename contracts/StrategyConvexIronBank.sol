@@ -285,28 +285,19 @@ contract StrategyConvexIronBank is BaseStrategy {
     {
         uint256 wantBal = want.balanceOf(address(this));
         if (_amountNeeded > wantBal) {
-            uint256 stakedTokens =
-                IConvexRewards(rewardsContract).balanceOf(address(this));
-            IConvexRewards(rewardsContract).withdrawAndUnwrap(
-                Math.min(stakedTokens, _amountNeeded - wantBal),
-                claimRewards
+            uint256 stakedBal = proxy.balanceOf(gauge);
+            proxy.withdraw(
+                gauge,
+                address(want),
+                Math.min(stakedBal, _amountNeeded - wantBal)
             );
-
             uint256 withdrawnBal = want.balanceOf(address(this));
             _liquidatedAmount = Math.min(_amountNeeded, withdrawnBal);
 
-            // if _amountNeeded != withdrawnBal, then we have an error
-            if (_amountNeeded != withdrawnBal) {
-                uint256 assets = estimatedTotalAssets();
-                uint256 debt = vault.strategies(address(this)).totalDebt;
-                _loss = debt.sub(assets);
-            }
-            require(_liquidatedAmount + _loss == _amountNeeded);
-        } else {
-            // we have enough balance to cover the liquidation available
-            require(_liquidatedAmount + _loss == _amountNeeded);
-            return (_amountNeeded, 0);
+            _loss = _amountNeeded.sub(_liquidatedAmount);
         }
+
+        return (_liquidatedAmount, _loss);
     }
 
     // Sells our harvested CRV into the selected output (DAI, USDC, or USDT).
